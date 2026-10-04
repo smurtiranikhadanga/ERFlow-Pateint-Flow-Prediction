@@ -85,27 +85,37 @@ class QueryRouter:
         else:
             intent_enum = intent
 
-        # 1. CATEGORY 1: Real-Time ML Predictions (High priority for operational intents with good confidence)
+        lower_text = text.lower().strip()
+
+        # 1. CATEGORY 2: Knowledge Base & Advisory Queries (ESI triage, surge policies, staffing ratios, waiting time reduction strategies)
+        is_knowledge_or_advisory = (
+            getattr(Intent, "KNOWLEDGE_QUERY", None) == intent_enum
+            or any(re.search(pattern, lower_text) for pattern in self.KNOWLEDGE_PATTERNS)
+            or any(
+                phrase in lower_text
+                for phrase in [
+                    "how can", "how to", "how do", "ways to", "how would", "tips to",
+                    "strategy", "strategies", "tactic", "tactics", "best practice",
+                    "reduce", "decrease", "cut", "shorten", "minimize", "prevent",
+                    "causes of", "cause of", "why do", "why is", "why are", "explain",
+                    "protocol", "policy", "guideline", "guidelines", "procedure",
+                    "ratio", "staffing", "nurse", "doctor"
+                ]
+            )
+        )
+        if is_knowledge_or_advisory:
+            logger.info(f"[QueryRouter] Query routed to CATEGORY 2 (KNOWLEDGE_BASE) - Knowledge/Advisory Query: '{text}'")
+            return QueryCategory.KNOWLEDGE_BASE
+
+        # 2. CATEGORY 1: Real-Time ML Predictions (High priority for operational point-estimate queries)
         if intent_enum in self.OPERATIONAL_INTENTS and confidence >= 0.50:
             logger.info(f"[QueryRouter] Query routed to CATEGORY 1 (OPERATIONAL_PREDICTION) - Intent: {intent_enum.value}")
             return QueryCategory.OPERATIONAL_PREDICTION
 
-        # 2. CATEGORY 3: General Conversational & Informational Intents (Greetings, Help, Model Info, Project Info, Safety Refusals)
+        # 3. CATEGORY 3: General Conversational & Informational Intents (Greetings, Help, Model Info, Project Info, Safety Refusals)
         if intent_enum in self.CONVERSATIONAL_INTENTS:
             logger.info(f"[QueryRouter] Query routed to CATEGORY 3 (GENERAL_CONVERSATIONAL) - Intent: {intent_enum.value}")
             return QueryCategory.GENERAL_CONVERSATIONAL
-
-        # 3. CATEGORY 2: Explicit Knowledge Base Queries
-        if getattr(Intent, "KNOWLEDGE_QUERY", None) == intent_enum:
-            logger.info(f"[QueryRouter] Query routed to CATEGORY 2 (KNOWLEDGE_BASE) - Intent: {intent_enum.value}")
-            return QueryCategory.KNOWLEDGE_BASE
-
-        # Check knowledge regex patterns for UNKNOWN or ambiguous queries
-        lower_text = text.lower().strip()
-        for pattern in self.KNOWLEDGE_PATTERNS:
-            if re.search(pattern, lower_text):
-                logger.info(f"[QueryRouter] Pattern match routed query to CATEGORY 2 (KNOWLEDGE_BASE) - Pattern: '{pattern}'")
-                return QueryCategory.KNOWLEDGE_BASE
 
         # 4. Explicit Fallback: If intent is UNKNOWN or confidence is low, fall back safely to GENERAL_CONVERSATIONAL
         logger.info(f"[QueryRouter] Ambiguous or unknown query routed to fallback CATEGORY 3 (GENERAL_CONVERSATIONAL)")

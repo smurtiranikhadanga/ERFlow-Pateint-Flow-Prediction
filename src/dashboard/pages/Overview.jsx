@@ -331,19 +331,19 @@ export default function Overview() {
       )}
 
       {/* TOP SECTION: 4 Core Questions & Operational Intelligence Hero */}
-      <div className="rounded-2xl border border-navy/30 bg-gradient-to-r from-[#0B2545] via-[#1B3A5E] to-[#2B4B6F] p-6 text-white shadow-lift">
+      <div className="rounded-2xl border border-blue-dark/30 bg-gradient-to-r from-[#063154] via-[#025F67] to-[#063154] p-6 text-white shadow-lift">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-green animate-soft-pulse" />
-              <span className="text-[12px] font-bold tracking-wider text-green-tint uppercase">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#2F9D94] animate-soft-pulse" />
+              <span className="text-[12px] font-bold tracking-wider text-[#2F9D94] uppercase">
                 ED Operational Intelligence Dashboard
               </span>
             </div>
             <h1 className="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">
               Emergency Department Health Center
             </h1>
-            <p className="mt-1 text-[13.5px] text-white/80">
+            <p className="mt-1 text-[13.5px] text-white/90">
               Grounded multi-model operational status derived live from 5 registered ML engines.
             </p>
           </div>
@@ -364,7 +364,7 @@ export default function Overview() {
 
             <Link
               to="/dashboard/ai-assistant"
-              className="inline-flex items-center gap-2 rounded-xl bg-blue px-4 py-2.5 text-[13px] font-bold text-white shadow-soft hover:bg-blue-dark transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#2F9D94] px-4 py-2.5 text-[13px] font-bold text-white shadow-soft hover:bg-[#025F67] transition-colors"
             >
               <Bot className="h-4 w-4" /> Ask ERFlow
             </Link>
@@ -372,28 +372,28 @@ export default function Overview() {
         </div>
 
         {/* 4 CORE QUESTIONS ANSWERS SUMMARY BAR */}
-        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 border-t border-white/15 pt-4 text-[13px]">
-          <div className="rounded-xl bg-black/25 p-3.5 backdrop-blur border border-white/15 shadow-sm">
+        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 border-t border-white/20 pt-4 text-[13px]">
+          <div className="rounded-xl bg-black/30 p-3.5 backdrop-blur border border-white/20 shadow-sm">
             <p className="text-[11.5px] font-semibold text-white/80 uppercase">1. How busy is the ER?</p>
             <p className="mt-1 font-bold text-white text-[14.5px]">
               {`${operationalState.occupancy_percent}% Occupancy • ${operationalState.patients_waiting} Waiting`}
             </p>
           </div>
-          <div className="rounded-xl bg-black/25 p-3.5 backdrop-blur border border-white/15 shadow-sm">
+          <div className="rounded-xl bg-black/30 p-3.5 backdrop-blur border border-white/20 shadow-sm">
             <p className="text-[11.5px] font-semibold text-white/80 uppercase">2. Expected Wait Time?</p>
             <p className="mt-1 font-bold text-white text-[14.5px]">
               {data ? `${Math.round(data.waiting_time.waiting_time_minutes)} min (${data.waiting_time.trend})` : "--"}
             </p>
           </div>
-          <div className="rounded-xl bg-black/25 p-3.5 backdrop-blur border border-white/15 shadow-sm">
+          <div className="rounded-xl bg-black/30 p-3.5 backdrop-blur border border-white/20 shadow-sm">
             <p className="text-[11.5px] font-semibold text-white/80 uppercase">3. Demand Increasing?</p>
             <p className="mt-1 font-bold text-white text-[14.5px]">
               {data ? `${data.forecast.trend} (+33.3% Velocity)` : "--"}
             </p>
           </div>
-          <div className="rounded-xl bg-black/25 p-3.5 backdrop-blur border border-white/15 shadow-sm">
+          <div className="rounded-xl bg-black/30 p-3.5 backdrop-blur border border-white/20 shadow-sm">
             <p className="text-[11.5px] font-semibold text-white/80 uppercase">4. What needs attention?</p>
-            <p className="mt-1 font-bold text-amber-tint text-[14.5px]">
+            <p className="mt-1 font-bold text-[#FCD34D] text-[14.5px]">
               {data ? (observations.length > 0 ? observations[0].title : "Normal Operational Baseline") : "--"}
             </p>
           </div>

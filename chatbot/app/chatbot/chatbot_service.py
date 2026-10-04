@@ -23,6 +23,7 @@ from app.chatbot.intent_detector import intent_detector
 from app.chatbot.response_generator import response_generator
 from app.chatbot.safety_guard import safety_guard
 from app.chatbot.query_router import query_router, QueryCategory
+from app.chatbot.nlp_responder import nlp_responder, normalize_clinical_query
 from app.ml_service.prediction_service import prediction_service
 from app.schemas.chat_schema import ChatRequest, ChatResponse
 from app.schemas.prediction_schema import Intent, PredictionRequest
@@ -57,6 +58,7 @@ class ChatbotService:
         self.resp_gen = response_generator
         self.safety_guard = safety_guard
         self.router = query_router
+        self.nlp_responder = nlp_responder
 
     def process_message(self, request: ChatRequest) -> ChatResponse:
         """
@@ -65,10 +67,11 @@ class ChatbotService:
         """
         # 1. Clean input & resolve session
         clean_text = sanitize_input(request.message)
+        norm_text = normalize_clinical_query(clean_text)
         session_id = self.conv_mgr.get_or_create_session(request.session_id)
 
         # 2. Medical Safety & Scope Check (Medical Diagnosis/Treatment Refusal Gate)
-        safety_check = self.safety_guard.check_scope(clean_text)
+        safety_check = self.safety_guard.check_scope(norm_text)
         if not safety_check.is_safe:
             logger.warning(f"Session {session_id} - Out-of-scope clinical query intercepted: {safety_check.reason}")
             refusal_text = safety_check.refusal_message or self.safety_guard.SAFETY_REFUSAL_MESSAGE
@@ -86,7 +89,7 @@ class ChatbotService:
             )
 
         # 3. Detect user intent
-        detection_result = self.intent_det.detect_intent(clean_text)
+        detection_result = self.intent_det.detect_intent(norm_text)
         intent_str = detection_result.get("intent", Intent.UNKNOWN.value)
         confidence = float(detection_result.get("confidence", 0.0))
 
@@ -95,9 +98,23 @@ class ChatbotService:
         except ValueError:
             intent_enum = Intent.UNKNOWN
 
+        # 3. Check direct exact domain/metric/strategy answer first (nurses, doctors, beds, occupancy, surge policies, triage, models, strategies)
+        direct_answer = self.nlp_responder.generate_direct_answer(clean_text, request.context or {})
+        if direct_answer and not direct_answer.startswith("**Emergency Department Operational Guidance**"):
+            resolved_intent = intent_enum.value if intent_enum != Intent.UNKNOWN else Intent.GENERAL_STATUS.value
+            self.conv_mgr.add_message(session_id=session_id, sender="user", text=clean_text, intent=resolved_intent)
+            self.conv_mgr.add_message(session_id=session_id, sender="bot", text=direct_answer, intent=resolved_intent)
+            return ChatResponse(
+                response=direct_answer,
+                intent=resolved_intent,
+                data=None,
+                confidence=0.98,
+                session_id=session_id,
+            )
+
         # 4. Check active session context for follow-up condition refinement & memory
         active_context = self.conv_mgr.get_prediction_context(session_id)
-        lower_msg = clean_text.lower()
+        lower_msg = norm_text.lower()
         req_context = dict(request.context or {})
 
         if active_context and active_context.get("intent"):
@@ -137,7 +154,7 @@ class ChatbotService:
                 request.context = req_context
 
         # 5. Route Query Category via QueryRouter
-        query_category = self.router.route_query(intent_enum, clean_text, confidence)
+        query_category = self.router.route_query(intent_enum, norm_text, confidence)
         logger.info(f"Session {session_id} - Resolved Intent: {intent_enum.value} | Priority Category: {query_category.value} (confidence: {confidence:.2f})")
 
         # Record user message in history
@@ -158,6 +175,17 @@ class ChatbotService:
         if query_category == QueryCategory.OPERATIONAL_PREDICTION:
             validation = self.validator.validate_prediction_input(intent_enum, request.context or {})
             if not validation.is_valid:
+                # If conversational or context-light, deliver direct domain intelligence
+                direct_reply = self.nlp_responder.generate_direct_answer(clean_text, request.context)
+                if direct_reply:
+                    self.conv_mgr.add_message(session_id=session_id, sender="bot", text=direct_reply, intent=intent_enum.value)
+                    return ChatResponse(
+                        response=direct_reply,
+                        intent=intent_enum.value,
+                        data=None,
+                        confidence=round(confidence, 2),
+                        session_id=session_id,
+                    )
                 reply_text = validation.clarification_message or validation.error_message or "Invalid model input parameters provided."
                 self.conv_mgr.add_message(session_id=session_id, sender="bot", text=reply_text, intent=intent_enum.value)
                 return ChatResponse(
@@ -190,6 +218,12 @@ class ChatbotService:
                 context=request.context,
             )
 
+            # Fallback to direct domain intelligence if prediction is unavailable or canned error
+            if not prediction_result.is_available or (reply_text and "currently unavailable" in reply_text.lower()):
+                direct_reply = self.nlp_responder.generate_direct_answer(clean_text, request.context)
+                if direct_reply:
+                    reply_text = direct_reply
+
         # =========================================================================
         # PRIORITY 2: KNOWLEDGE-BASED QUESTIONS (ChromaDB RAG Retrieval)
         # =========================================================================
@@ -203,40 +237,63 @@ class ChatbotService:
 
             if is_rag_enabled and retriever is not None:
                 try:
-                    rag_context, citations, max_score = retriever.retrieve_context(clean_text, top_k=2)
+                    rag_context, citations, max_score = retriever.retrieve_context(norm_text, top_k=2)
                 except Exception as e:
                     # Priority 5 Safeguard: Log RAG exception and prevent app crash
                     logger.error(f"[RAG Failure Safeguard] Session {session_id} - Vector store or retriever exception: {e}. Executing safe fallback to CATEGORY 3.")
             elif not is_rag_enabled:
                 logger.info(f"Session {session_id} - RAG disabled via RAG_ENABLED=false env setting. Executing safe fallback to CATEGORY 3.")
 
-            if rag_context and max_score >= 0.15:
+            if rag_context and max_score >= 0.12:
                 unique_sources = list(dict.fromkeys([c["source"] for c in citations if c.get("source")]))
-                sources_formatted = "\n".join([f"- {src}" for src in unique_sources]) if unique_sources else "- Knowledge Base Document"
-                
-                reply_text = f"{rag_context}\n\n**Sources:**\n{sources_formatted}"
+                reply_text = self.nlp_responder.generate_direct_answer(
+                    query=norm_text,
+                    context=request.context,
+                    rag_context=rag_context,
+                    citations=citations,
+                )
+                data_payload = {
+                    "rag_retrieval": True,
+                    "confidence_score": max_score,
+                    "sources": unique_sources if unique_sources else ["Hospital Guidelines"],
+                    "citations": citations,
+                }
+                intent_enum = Intent.KNOWLEDGE_QUERY
+                confidence = max(confidence, max_score, 0.85)
+            else:
+                # Fallback to direct general answer
+                logger.info(f"Session {session_id} - RAG retrieval below threshold. Answering via direct domain intelligence.")
+                query_category = QueryCategory.GENERAL_CONVERSATIONAL
+
+        # =========================================================================
+        # PRIORITY 3 & FALLBACKS: ANY GENERAL NLP USER QUERY
+        # =========================================================================
+        if query_category == QueryCategory.GENERAL_CONVERSATIONAL or reply_text is None:
+            # Query knowledge base if not already queried
+            rag_context = ""
+            citations = []
+            max_score = 0.0
+            if retriever is not None:
+                try:
+                    rag_context, citations, max_score = retriever.retrieve_context(norm_text, top_k=2)
+                except Exception:
+                    pass
+
+            reply_text = self.nlp_responder.generate_direct_answer(
+                query=norm_text,
+                context=request.context,
+                rag_context=rag_context,
+                citations=citations,
+            )
+            if citations and max_score >= 0.12:
+                unique_sources = list(dict.fromkeys([c["source"] for c in citations if c.get("source")]))
                 data_payload = {
                     "rag_retrieval": True,
                     "confidence_score": max_score,
                     "sources": unique_sources,
                     "citations": citations,
                 }
-                intent_enum = Intent.KNOWLEDGE_QUERY
                 confidence = max(confidence, max_score)
-            else:
-                # Priority 4 Fallback: No matching knowledge found or similarity below threshold
-                logger.warning(f"[RAG Fallback] Session {session_id} - RAG retrieval found no matching passages (score: {max_score:.2f}). Gracefully falling back to CATEGORY 3.")
-                query_category = QueryCategory.GENERAL_CONVERSATIONAL
-
-        # =========================================================================
-        # PRIORITY 3 & FALLBACKS: GENERAL CONVERSATIONAL QUESTIONS
-        # =========================================================================
-        if query_category == QueryCategory.GENERAL_CONVERSATIONAL or reply_text is None:
-            reply_text = self.resp_gen.generate_response(
-                intent=intent_enum,
-                prediction_result=None,
-                context=request.context,
-            )
 
         # 7. Record bot message in history
         self.conv_mgr.add_message(

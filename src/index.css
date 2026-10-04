@@ -1,33 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  /* Neutrals */
-  --color-bg: #F7F9FC;
-  --color-surface: #FFFFFF;
-  --color-navy: #0B2545;
-  --color-navy-muted: #4B5B71;
-  --color-navy-soft: #8494A8;
-  --color-border: #E1E7EF;
-  --color-border-strong: #CBD5E1;
+  /* Light Theme - Scooter, Alabaster, Heather, Blue Lagoon, Sapphire Palette */
+  --color-bg: #F7F6F2; /* Alabaster Light Canvas Base */
+  --color-surface: #FFFFFF; /* Crisp White Card Surfaces */
+  --color-navy: #063154; /* Sapphire Primary Text (Deep Navy for High Contrast) */
+  --color-navy-muted: #025F67; /* Blue Lagoon Subtitles & Secondary Headings */
+  --color-navy-soft: #4A6070; /* Heather Slate Body Copy */
+  --color-border: #BCC5CC; /* Heather Card Outlines & Dividers */
+  --color-border-strong: #2F9D94; /* Scooter Active Focus Border */
 
   /* Accents */
-  --color-blue: #1B57D8;
-  --color-blue-dark: #123E9E;
-  --color-blue-tint: #EAF0FE;
-  --color-teal: #0E8F82;
-  --color-teal-tint: #E6F5F3;
-  --color-green: #12895A;
-  --color-green-tint: #E6F5EC;
-  --color-amber: #B9740C;
-  --color-amber-tint: #FBF0DD;
-  --color-red: #C22A2A;
-  --color-red-tint: #FBEAEA;
+  --color-blue: #2F9D94; /* Scooter Primary Action Accent */
+  --color-blue-dark: #025F67; /* Blue Lagoon Hover & Deep Accent */
+  --color-blue-tint: rgba(47, 157, 148, 0.12); /* Soft Scooter Background Glow */
+  
+  --color-teal: #025F67; /* Blue Lagoon Secondary Accent */
+  --color-teal-tint: rgba(2, 95, 103, 0.12);
+  
+  --color-green: #2F9D94; /* Scooter Teal Accent */
+  --color-green-tint: rgba(47, 157, 148, 0.12);
+  
+  --color-amber: #D97706; /* Warm Amber */
+  --color-amber-tint: rgba(217, 119, 6, 0.12);
+  
+  --color-red: #DC2626; /* Warning Crimson */
+  --color-red-tint: rgba(220, 38, 38, 0.12);
 
-  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  /* Clean White surface override */
+  --color-white: #FFFFFF;
 
-  --shadow-soft: 0 1px 2px rgba(11, 37, 69, 0.04), 0 8px 24px -12px rgba(11, 37, 69, 0.12);
-  --shadow-lift: 0 4px 8px rgba(11, 37, 69, 0.04), 0 16px 40px -16px rgba(11, 37, 69, 0.18);
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+
+  /* Crisp Light Shadows tuned to Sapphire and Heather */
+  --shadow-soft: 0 4px 20px -2px rgba(6, 49, 84, 0.08);
+  --shadow-lift: 0 10px 30px -5px rgba(6, 49, 84, 0.12), 0 0 15px rgba(47, 157, 148, 0.2);
 }
 
 * {
@@ -40,12 +49,17 @@ html {
 
 body {
   margin: 0;
-  background: var(--color-bg);
-  color: var(--color-navy);
+  background-color: #F7F6F2;
+  color: #063154;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+.bg-surface, .bg-bg {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 #root {

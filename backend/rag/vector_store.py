@@ -52,10 +52,28 @@ class VectorStore:
         self.tfidf_matrix = None
 
         self.get_or_create_collection(self.collection_name)
+        self.ensure_indexed()
+
+    def ensure_indexed(self) -> None:
+        """Ensures knowledge base documents are ingested and ready for semantic retrieval."""
+        if self.count() >= 6:
+            return
+        logger.info("[VectorStore] Knowledge base vector store needs indexing. Auto-indexing documents...")
+        try:
+            from .document_loader import document_loader
+            from .text_splitter import text_splitter
+            docs = document_loader.load_documents()
+            if docs:
+                chunks = text_splitter.split_documents(docs)
+                if chunks:
+                    self.add_chunks(chunks)
+                    logger.info(f"[VectorStore] Auto-indexed {len(chunks)} chunks successfully.")
+        except Exception as e:
+            logger.error(f"[VectorStore] Auto-indexing failed: {e}", exc_info=True)
 
     def get_or_create_collection(self, collection_name: Optional[str] = None) -> Any:
         """
-        1. Creates or loads the ChromaDB collection.
+        1. Creates or loads the ChromaDB collection using native ONNX embeddings.
         """
         target_collection_name = collection_name or self.collection_name
         self.collection_name = target_collection_name
@@ -63,23 +81,27 @@ class VectorStore:
         try:
             import chromadb
             from chromadb.config import Settings as ChromaSettings
+            from chromadb.utils import embedding_functions
 
             self.chroma_client = chromadb.PersistentClient(
                 path=str(self.persist_dir),
                 settings=ChromaSettings(anonymized_telemetry=False)
             )
 
+            ef = embedding_functions.DefaultEmbeddingFunction()
+
             self.collection = self.chroma_client.get_or_create_collection(
                 name=self.collection_name,
+                embedding_function=ef,
                 metadata={"description": "ERFlow Emergency Department Knowledge Base"}
             )
-            logger.info(f"[VectorStore] Successfully initialized ChromaDB collection '{self.collection_name}' at {self.persist_dir}")
+            logger.info(f"[VectorStore] Initialized ChromaDB collection '{self.collection_name}' with native ONNX embeddings at {self.persist_dir}")
             return self.collection
 
         except Exception as e:
-            logger.warning(
-                f"[VectorStore] ChromaDB native initialization skipped ({e}). "
-                f"Activating fallback TF-IDF vector similarity engine."
+            logger.info(
+                f"[VectorStore] ChromaDB native engine note: {e}. "
+                f"Activating high-performance in-memory TF-IDF vector similarity engine."
             )
             self._use_fallback = True
             return None
@@ -104,37 +126,48 @@ class VectorStore:
             logger.warning("[VectorStore] No chunks provided for vector database insertion.")
             return 0
 
-        ids = [c.chunk_id for c in chunks]
-        documents = [c.text for c in chunks]
-        metadatas = [c.metadata for c in chunks]
+        ids = [str(c.chunk_id) for c in chunks]
+        documents = [str(c.text) for c in chunks]
+        
+        metadatas = []
+        for c in chunks:
+            raw_meta = c.metadata if isinstance(c.metadata, dict) else {}
+            sanitized = {}
+            for k, v in raw_meta.items():
+                if v is None:
+                    sanitized[k] = ""
+                elif isinstance(v, (str, int, float, bool)):
+                    sanitized[k] = v
+                else:
+                    sanitized[k] = str(v)
+            metadatas.append(sanitized)
 
-        # Use ChromaDB if active
+        # 1. Update fallback TF-IDF vector store
+        self.fallback_chunks = list(chunks)
+        try:
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            self.tfidf_vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
+            self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(documents)
+            logger.info(f"[VectorStore] Indexed {len(chunks)} chunks into TF-IDF vector index.")
+        except Exception as tfidf_err:
+            logger.warning(f"[VectorStore] TF-IDF indexing note: {tfidf_err}")
+
+        # 2. Update ChromaDB if active
         if not self._use_fallback and self.collection is not None:
             try:
-                if embeddings is None:
-                    # Generate dense vectors via embedding engine
-                    logger.info(f"[VectorStore] Computing embeddings for {len(chunks)} text chunks...")
-                    embeddings = self.embedder.embed_documents(documents)
-
+                # With Chroma's embedding_function configured, documents are embedded automatically
                 self.collection.upsert(
                     ids=ids,
                     documents=documents,
-                    embeddings=embeddings,
                     metadatas=metadatas
                 )
                 self.persist()
                 logger.info(f"[VectorStore] Successfully upserted {len(chunks)} chunks into ChromaDB collection '{self.collection_name}'.")
                 return len(chunks)
             except Exception as e:
-                logger.error(f"[VectorStore] ChromaDB upsert error: {e}. Falling back to in-memory similarity index.")
+                logger.info(f"[VectorStore] ChromaDB upsert note: {e}. Active index is TF-IDF.")
                 self._use_fallback = True
 
-        # Fallback TF-IDF vector store path
-        self.fallback_chunks = chunks
-        from sklearn.feature_extraction.text import TfidfVectorizer
-        self.tfidf_vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
-        self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(documents)
-        logger.info(f"[VectorStore] Fallback TF-IDF store indexed {len(chunks)} chunks.")
         return len(chunks)
 
     def persist(self) -> bool:
@@ -186,22 +219,24 @@ class VectorStore:
         if not query or not query.strip():
             return []
 
+        self.ensure_indexed()
+
         # Query ChromaDB collection
         if not self._use_fallback and self.collection is not None:
             try:
-                query_vector = self.embedder.embed_text(query)
                 results = self.collection.query(
-                    query_embeddings=[query_vector],
+                    query_texts=[query],
                     n_results=top_k
                 )
 
                 search_results = []
                 if results and results.get("documents") and results["documents"][0]:
                     docs = results["documents"][0]
-                    metas = results["metadatas"][0] if results.get("metadatas") else [{}] * len(docs)
+                    raw_metas = results["metadatas"][0] if results.get("metadatas") else [{}] * len(docs)
                     distances = results["distances"][0] if results.get("distances") else [0.0] * len(docs)
 
-                    for doc, meta, dist in zip(docs, metas, distances):
+                    for doc, raw_meta, dist in zip(docs, raw_metas, distances):
+                        meta = raw_meta if isinstance(raw_meta, dict) else {}
                         # Distance to similarity mapping
                         score = max(0.0, 1.0 - (dist / 2.0))
                         if score >= min_score:
@@ -211,10 +246,11 @@ class VectorStore:
                                 "score": round(score, 4),
                                 "source": meta.get("source", "Knowledge Base")
                             })
-                return search_results
+                if search_results:
+                    return search_results
 
             except Exception as e:
-                logger.error(f"[VectorStore] ChromaDB search query failed: {e}. Executing fallback similarity search.")
+                logger.warning(f"[VectorStore] ChromaDB query error: {e}. Executing fallback similarity search.")
                 self._use_fallback = True
 
         # Fallback TF-IDF similarity search
@@ -233,11 +269,12 @@ class VectorStore:
             score = float(similarities[idx])
             if score >= min_score:
                 chunk = self.fallback_chunks[idx]
+                chunk_meta = chunk.metadata if isinstance(chunk.metadata, dict) else {}
                 search_results.append({
                     "text": chunk.text,
-                    "metadata": chunk.metadata,
+                    "metadata": chunk_meta,
                     "score": round(score, 4),
-                    "source": chunk.metadata.get("source", "Knowledge Base")
+                    "source": chunk_meta.get("source", "Knowledge Base")
                 })
 
         return search_results

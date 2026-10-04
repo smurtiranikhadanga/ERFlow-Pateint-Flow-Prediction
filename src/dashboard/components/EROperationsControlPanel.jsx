@@ -18,10 +18,15 @@ export default function EROperationsControlPanel({ className = "" }) {
 
   const [form, setForm] = useState(operationalState);
 
+  useEffect(() => {
+    setForm(operationalState);
+  }, [operationalState]);
+
   const handleChange = (field, val) => {
     const updated = { ...form, [field]: val };
     setForm(updated);
     setOperationalState(updated);
+    updatePredictions(updated);
   };
 
   const handleUpdateAll = async (e) => {

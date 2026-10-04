@@ -96,8 +96,18 @@ class TextSplitter:
         if not doc or not doc.content or not doc.content.strip():
             return chunks
 
-        # 1. Section-aware splitting by Markdown headers (e.g., #, ##, ###)
-        sections = re.split(r'\n(?=#{1,3}\s)', doc.content)
+        # 1. Section-aware splitting by major Markdown headers (##) with automatic merging of short preamble headers
+        raw_sections = re.split(r'\n(?=##\s)', doc.content)
+        sections = []
+        for s in raw_sections:
+            s_clean = s.strip()
+            if not s_clean:
+                continue
+            if sections and len(sections[-1].split()) < 40:
+                sections[-1] = sections[-1] + "\n\n" + s_clean
+            else:
+                sections.append(s_clean)
+
         chunk_counter = 0
 
         for section in sections:

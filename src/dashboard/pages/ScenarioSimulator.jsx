@@ -170,9 +170,9 @@ export default function ScenarioSimulator() {
   const [activePreset, setActivePreset] = useState("custom");
 
   // Form Controls State initialized to Central ER State Baseline
-  const [scenarioControls, setScenarioControls] = useState(BASELINE_STATE);
+  const [scenarioControls, setScenarioControls] = useState(operationalState);
 
-  // Initialize or establish baseline predictions separately
+  // Sync scenarioControls and baselineData when operationalState or predictions change
   useEffect(() => {
     let isMounted = true;
     async function initBaseline() {
@@ -181,10 +181,10 @@ export default function ScenarioSimulator() {
       } else {
         try {
           if (isRealMode) {
-            const res = await erflowApi.getDashboardOverview(BASELINE_STATE);
+            const res = await erflowApi.getDashboardOverview(operationalState);
             if (isMounted) setBaselineData(res);
           } else {
-            const res = computeDemoPredictions(BASELINE_STATE);
+            const res = computeDemoPredictions(operationalState);
             if (isMounted) setBaselineData(res);
           }
         } catch {
@@ -193,6 +193,10 @@ export default function ScenarioSimulator() {
       }
     }
     initBaseline();
+    if (activePreset === "custom") {
+      setScenarioControls(operationalState);
+      analyzeScenario(operationalState);
+    }
     return () => { isMounted = false; };
   }, [isRealMode, predictions, operationalState]);
 
@@ -223,8 +227,8 @@ export default function ScenarioSimulator() {
 
   const resetToCentralBaseline = () => {
     setActivePreset("custom");
-    setScenarioControls(BASELINE_STATE);
-    analyzeScenario(BASELINE_STATE);
+    setScenarioControls(operationalState);
+    analyzeScenario(operationalState);
   };
 
   const handlePresetSelect = (presetKey) => {
@@ -237,7 +241,12 @@ export default function ScenarioSimulator() {
   };
 
   const updateControl = (field, val) => {
-    setScenarioControls((prev) => ({ ...prev, [field]: val }));
+    setActivePreset("custom");
+    setScenarioControls((prev) => {
+      const updated = { ...prev, [field]: val };
+      analyzeScenario(updated);
+      return updated;
+    });
   };
 
   // Extract Comparative Metrics (Baseline vs Scenario)

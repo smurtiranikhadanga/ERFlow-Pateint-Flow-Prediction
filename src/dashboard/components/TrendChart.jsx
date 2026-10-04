@@ -5,13 +5,15 @@
 export default function TrendChart({
   data,
   height = 220,
-  color = "var(--color-blue)",
-  forecastColor = "var(--color-teal)",
+  color = "#025F67",
+  forecastColor = "#2F9D94",
   showLegend = true,
   valueSuffix = "",
   tickEvery,
   historicalLabel = "Observed",
 }) {
+  if (!data || data.length === 0) return null;
+
   const width = 100;
   const chartHeight = 100;
   const values = data.map((d) => d.value);
@@ -22,7 +24,7 @@ export default function TrendChart({
 
   const points = data.map((d, i) => {
     const x = i * step;
-    const y = chartHeight - ((d.value - min) / range) * chartHeight * 0.86 - 6;
+    const y = chartHeight - ((d.value - min) / range) * chartHeight * 0.82 - 8;
     return [x, y];
   });
 
@@ -56,9 +58,12 @@ export default function TrendChart({
     .map((_, i) => i)
     .filter((i) => i % gap === 0 || i === data.length - 1);
 
+  const effectiveColor = color.startsWith("var") ? "#025F67" : color;
+  const effectiveForecastColor = forecastColor.startsWith("var") ? "#2F9D94" : forecastColor;
+
   return (
     <div>
-      <div style={{ height }} className="w-full">
+      <div style={{ height }} className="w-full relative">
         <svg
           viewBox={`0 0 ${width} ${chartHeight}`}
           preserveAspectRatio="none"
@@ -67,8 +72,8 @@ export default function TrendChart({
         >
           <defs>
             <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity="0.16" />
-              <stop offset="100%" stopColor={color} stopOpacity="0" />
+              <stop offset="0%" stopColor={effectiveColor} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={effectiveColor} stopOpacity="0.02" />
             </linearGradient>
           </defs>
 
@@ -79,53 +84,80 @@ export default function TrendChart({
               x2={width}
               y1={chartHeight * g}
               y2={chartHeight * g}
-              stroke="var(--color-border)"
-              strokeWidth="0.4"
+              stroke="#BCC5CC"
+              strokeWidth="0.8"
+              strokeDasharray="2 2"
               vectorEffect="non-scaling-stroke"
             />
           ))}
 
           <path d={areaPath} fill="url(#trendFill)" />
+          
+          {/* Main Observed Path */}
           <path
             d={observedPath}
             fill="none"
-            stroke={color}
-            strokeWidth="1.8"
+            stroke={effectiveColor}
+            strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
+            style={{ stroke: effectiveColor, strokeWidth: "3px" }}
             vectorEffect="non-scaling-stroke"
           />
+          
+          {/* Forecast Dashed Path */}
           {forecastPath && (
             <path
               d={forecastPath}
               fill="none"
-              stroke={forecastColor}
-              strokeWidth="1.8"
-              strokeDasharray="3 2.5"
+              stroke={effectiveForecastColor}
+              strokeWidth="3"
+              strokeDasharray="5 4"
               strokeLinecap="round"
+              style={{ stroke: effectiveForecastColor, strokeWidth: "3px" }}
               vectorEffect="non-scaling-stroke"
             />
           )}
+
+          {/* Highlight Points on Key Steps */}
+          {points.map(([x, y], i) => {
+            if (i % gap === 0 || i === data.length - 1) {
+              const isF = data[i].kind === "forecast";
+              return (
+                <circle
+                  key={i}
+                  cx={x}
+                  cy={y}
+                  r="2.5"
+                  fill={isF ? effectiveForecastColor : effectiveColor}
+                  stroke="#FFFFFF"
+                  strokeWidth="1.2"
+                  vectorEffect="non-scaling-stroke"
+                />
+              );
+            }
+            return null;
+          })}
         </svg>
       </div>
 
-      <div className="mt-2 flex justify-between text-[10.5px] font-medium text-navy-soft sm:text-[11px]">
+      <div className="mt-2 flex justify-between text-[10.5px] font-bold text-navy-muted sm:text-[11px]">
         {tickIndices.map((i) => (
           <span key={i}>{data[i].t}</span>
         ))}
       </div>
 
       {showLegend && (
-        <div className="mt-2 flex items-center gap-4 text-[11px] font-medium text-navy-soft">
+        <div className="mt-2 flex items-center gap-4 text-[11px] font-bold text-navy">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-0.5 w-3 rounded-full" style={{ background: color }} />
+            <span className="h-2 w-3 rounded-full" style={{ background: effectiveColor }} />
             {hasForecast ? historicalLabel : "Value"}
             {valueSuffix}
           </span>
           {hasForecast && (
             <span className="inline-flex items-center gap-1.5">
-              <span className="h-0.5 w-3 rounded-full" style={{ background: forecastColor }} />
-              Forecast
+              <span className="h-2 w-3 rounded-full" style={{ background: effectiveForecastColor }} />
+              Forecast (LSTM Model)
             </span>
           )}
         </div>

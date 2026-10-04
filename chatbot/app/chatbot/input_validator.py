@@ -82,6 +82,23 @@ class InputValidator:
         """
         context = context or {}
         features = dict(context.get("features", {}))
+        # Support flat context payloads passed directly from frontend operationalState
+        for key in (
+            "occupancy_percent",
+            "patients_waiting",
+            "arrival_rate",
+            "available_beds",
+            "available_doctors",
+            "available_nurses",
+            "severity_level",
+            "hour_of_day",
+            "day_of_week",
+            "month",
+            "triage_level",
+        ):
+            if key in context and key not in features:
+                features[key] = context[key]
+
         errors: List[str] = []
 
         # 1. TEMPORAL & RANGE BOUNDARY VALIDATION

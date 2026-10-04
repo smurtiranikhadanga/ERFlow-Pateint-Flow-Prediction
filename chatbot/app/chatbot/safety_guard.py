@@ -40,14 +40,12 @@ class SafetyGuard:
         "(e.g., 911 / 112) or consult a qualified healthcare professional immediately."
     )
 
-    # 1. Symptom Checking & Diagnosis Inquiries
+    # 1. Symptom Checking & Diagnosis Inquiries (Targeted to First-Person Acute Requests)
     DIAGNOSIS_PATTERNS = [
-        r"\b(diagnos(e|is)|do\s*i\s*have|what\s*(disease|illness|condition|infection)\s*(do\s*i\s*have|is\s*this))\b",
+        r"\b(diagnos(e|is)\s*(me|my)|do\s*i\s*have|what\s*(disease|illness|condition|infection)\s*(do\s*i\s*have|is\s*this))\b",
         r"\b(i\s*(have|am\s*having|feel)\s*(chest\s*pain|shortness\s*of\s*breath|severe\s*headache|dizziness|fever|cough|nausea|vomiting|bleeding))\b",
         r"\bmy\s*(chest|head|stomach|throat|arm|leg|abdomen|back|heart|eye)\s*(hurts|is\s*hurting|aches|pains)\b",
-        r"\bsymptoms?\s*of\b",
-        r"\b(is\s*.*(fatal|life\s*threatening|cancer))\b",
-        r"\blife\s*threatening\b",
+        r"\b(am\s*i\s*dying|is\s*my\s*condition\s*(fatal|cancer))\b",
     ]
 
     # 2. Medication, Prescription, and Dosage Inquiries

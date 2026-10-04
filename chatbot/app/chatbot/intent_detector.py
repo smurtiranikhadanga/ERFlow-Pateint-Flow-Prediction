@@ -10,13 +10,12 @@ class IntentDetector:
     scoring and priority ordering without requiring external LLM dependencies.
     """
 
-    # 1. OUT_OF_SCOPE_MEDICAL (Intercepts clinical symptom / diagnosis queries)
+    # 1. OUT_OF_SCOPE_MEDICAL (Intercepts explicit personal clinical self-diagnosis or acute medical treatment requests)
     OUT_OF_SCOPE_PATTERNS = [
-        (r"\b(chest\s*pain|shortness\s*of\s*breath|heart\s*attack)\b", 0.95),
+        (r"\b(i\s*have|i\s*am\s*having|my)\s*(chest\s*pain|shortness\s*of\s*breath|heart\s*attack)\b", 0.95),
         (r"\b(diagnose\s*me|what\s*(disease|illness)\s*do\s*i\s*have)\b", 0.95),
-        (r"\b(what\s*medicine|prescription|dosage|ibuprofen|antibiotics)\b", 0.95),
-        (r"\b(treat\s*(a\s*)?(wound|burn)|symptoms\s*of)\b", 0.95),
-        (r"\b(medical\s*advice|life\s*threatening)\b", 0.95),
+        (r"\b(what\s*(medicine|drug|pill)\s*should\s*i\s*take|prescribe\s*me)\b", 0.95),
+        (r"\b(how\s*to\s*treat\s*my|home\s*remedy\s*for\s*my)\b", 0.95),
     ]
 
     # 2. GREETING PATTERNS

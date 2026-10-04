@@ -73,21 +73,31 @@ function MLPredictionCard({ data, intent, confidence, timestamp }) {
   // Extract primary prediction value
   const predictionVal =
     data.predicted_volume !== undefined ? `${data.predicted_volume} arrivals` :
-    data.estimated_wait_minutes !== undefined ? `${data.estimated_wait_minutes} mins` :
+    data.estimated_wait_minutes !== undefined ? `${Math.round(data.estimated_wait_minutes)} mins` :
     data.crowding_level ||
     data.status ||
     data.pattern_name ||
     (data.cluster_id !== undefined ? `Cluster #${data.cluster_id}` : null) ||
+    (data.crowding?.crowding_level ? `${data.crowding.crowding_level} Risk` : null) ||
+    (data.waiting_time?.estimated_wait_minutes ? `${Math.round(data.waiting_time.estimated_wait_minutes)} min wait` : null) ||
     data.prediction ||
-    "N/A";
+    "Live ER Analysis";
 
-  const modelName = data.adapter || data.model_name || "Real ML Model Adapter";
+  const modelName =
+    data.adapter ||
+    data.model_name ||
+    (intent === "GENERAL_STATUS" ? "Multi-Model Ensemble" : "Real ML Model Adapter");
 
   // Build WHAT THE MODEL SEES strictly from available inputs
   const inputsSees = [];
-  if (data.patients_waiting !== undefined) inputsSees.push(`${data.patients_waiting} patients waiting`);
-  if (data.arrival_rate !== undefined) inputsSees.push(`${data.arrival_rate} arrivals/hr`);
-  if (data.occupancy_percent !== undefined) inputsSees.push(`${data.occupancy_percent}% occupancy`);
+  const waitPts = data.patients_waiting ?? data.features?.patients_waiting;
+  const arrRate = data.arrival_rate ?? data.features?.arrival_rate;
+  const occPct = data.occupancy_percent ?? data.features?.occupancy_percent;
+
+  if (waitPts !== undefined) inputsSees.push(`${waitPts} patients waiting`);
+  if (arrRate !== undefined) inputsSees.push(`${arrRate} arrivals/hr`);
+  if (occPct !== undefined) inputsSees.push(`${occPct}% occupancy`);
+
   if (inputsSees.length === 0) {
     if (isRealMode) {
       inputsSees.push("Live ER Operational State");
@@ -168,7 +178,7 @@ function Bubble({ role, text, intent, confidence, data, timestamp, isError }) {
       <div className={`min-w-0 max-w-[88%] sm:max-w-[78%] ${isUser ? "flex flex-col items-end" : ""}`}>
         {/* Natural Language Primary Message */}
         <div
-          className={`rounded-2xl px-4 py-3 text-[13.5px] leading-relaxed ${
+          className={`rounded-2xl px-4 py-3 text-[13.5px] leading-relaxed whitespace-pre-wrap ${
             isUser
               ? "rounded-tr-sm bg-navy text-white"
               : isError

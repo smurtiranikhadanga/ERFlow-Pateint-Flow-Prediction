@@ -8,6 +8,17 @@ import h5py
 import pandas as pd
 import numpy as np
 
+# Backward compatibility shim for unpickling scikit-learn 1.6 models on scikit-learn 1.7+
+try:
+    import sklearn.compose._column_transformer as _ct
+    if not hasattr(_ct, "_RemainderColsList"):
+        _ct._RemainderColsList = type("_RemainderColsList", (list,), {})
+    from sklearn.impute import SimpleImputer
+    if not hasattr(SimpleImputer, "_fill_dtype"):
+        SimpleImputer._fill_dtype = property(lambda self: getattr(self, "_fit_dtype", np.float64))
+except Exception:
+    pass
+
 logger = logging.getLogger("erflow.artifact_loader")
 
 

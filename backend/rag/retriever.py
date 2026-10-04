@@ -71,6 +71,12 @@ class Retriever:
         top_k = top_k or rag_settings.TOP_K_RESULTS
         min_score = min_score if min_score is not None else rag_settings.MIN_SIMILARITY_SCORE
 
+        if hasattr(self.store, "ensure_indexed"):
+            try:
+                self.store.ensure_indexed()
+            except Exception as e:
+                logger.warning(f"[Retriever] Vector store indexing note: {e}")
+
         results = self.store.similarity_search(query=query.strip(), top_k=top_k, min_score=min_score)
         return results
 

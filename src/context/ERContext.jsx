@@ -2,6 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { erflowApi } from "../services/api";
 import { useMode } from "./ModeContext";
 
+const now = new Date();
+const currentHour = now.getHours();
+const currentDay = now.getDay();
+const currentMonth = now.getMonth() + 1;
+
 const DEFAULT_OPERATIONAL_STATE = {
   occupancy_percent: 78,
   patients_waiting: 24,
@@ -10,9 +15,9 @@ const DEFAULT_OPERATIONAL_STATE = {
   available_doctors: 5,
   available_nurses: 9,
   severity_level: 3.0,
-  hour_of_day: 18,
-  day_of_week: 4,
-  month: 7,
+  hour_of_day: currentHour,
+  day_of_week: currentDay,
+  month: currentMonth,
 };
 
 const ERContext = createContext({

@@ -45,6 +45,11 @@ async def lifespan(app: FastAPI):
         artifact_loader.load_all()
         if callable(load_real_models):
             load_real_models()
+        try:
+            from .rag.vector_store import vector_store
+            vector_store.ensure_indexed()
+        except Exception as rag_err:
+            logger.warning(f"RAG vector store initialization note: {rag_err}")
         logger.info("All ML model artifacts and chatbot adapters loaded and verified.")
     except Exception as e:
         logger.error(f"Critical error loading model artifacts during startup: {e}", exc_info=True)
