@@ -20,11 +20,15 @@ export default function SummaryCard({ label, value, trend, trendDirection, tone 
           {onExplain && (
             <button
               type="button"
-              onClick={onExplain}
-              className="inline-flex items-center gap-1 rounded-md border border-blue/20 bg-blue-tint/70 px-2 py-0.5 text-[11px] font-bold text-blue hover:bg-blue hover:text-white transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onExplain();
+              }}
+              className="inline-flex items-center gap-1 rounded-md border border-blue/30 bg-blue-tint px-2.5 py-1 text-[11.5px] font-bold text-blue hover:bg-blue hover:text-white transition-all cursor-pointer z-10 shadow-sm"
               title="Click to view TreeSHAP feature attributions"
             >
-              <HelpCircle className="h-3 w-3" /> Why?
+              <HelpCircle className="h-3.5 w-3.5 shrink-0" /> Why?
             </button>
           )}
           {Icon && (

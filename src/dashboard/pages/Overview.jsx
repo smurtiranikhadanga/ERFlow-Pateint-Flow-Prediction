@@ -631,8 +631,14 @@ export default function Overview() {
 
       {/* EXPLAINABILITY MODAL (TreeSHAP Feature Attributions) */}
       {activeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-lift">
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-navy/70 p-4 backdrop-blur-md"
+          onClick={() => setActiveModal(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl relative z-[10000]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <HelpCircle className="h-5 w-5 text-blue" />
