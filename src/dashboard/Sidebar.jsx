@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   Activity,
@@ -86,35 +87,46 @@ function NavItems({ collapsed, onNavigate }) {
   );
 }
 
-// Desktop / tablet sidebar — collapsible, always present in layout flow.
-export function DesktopSidebar({ collapsed, onToggleCollapsed }) {
+// Desktop / tablet sidebar — dynamic hover expansion, collapsed when not hovered.
+export function DesktopSidebar({ collapsed: externalCollapsed, onToggleCollapsed }) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPinned, setIsPinned] = useState(false);
+
+  // Collapsed when mouse is not hovering (unless pinned)
+  const isCollapsed = isPinned ? externalCollapsed : !isHovered;
+
   return (
     <aside
-      className={`sticky top-0 hidden h-svh shrink-0 flex-col justify-between border-r border-white/10 bg-navy px-3 py-4 transition-[width] duration-200 lg:flex ${
-        collapsed ? "w-[76px]" : "w-64"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`sticky top-0 hidden h-svh shrink-0 flex-col justify-between border-r border-white/10 bg-navy px-3 py-4 transition-all duration-300 ease-in-out z-30 lg:flex ${
+        isCollapsed ? "w-[76px]" : "w-64 shadow-2xl"
       }`}
     >
       <div>
         <div className="mb-6">
-          <Logo collapsed={collapsed} />
+          <Logo collapsed={isCollapsed} />
         </div>
-        <NavItems collapsed={collapsed} />
+        <NavItems collapsed={isCollapsed} />
       </div>
 
       <button
         type="button"
-        onClick={onToggleCollapsed}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        onClick={() => {
+          setIsPinned((prev) => !prev);
+          if (onToggleCollapsed) onToggleCollapsed();
+        }}
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] font-medium text-white/60 transition-colors hover:bg-white/5 hover:text-white ${
-          collapsed ? "justify-center" : ""
+          isCollapsed ? "justify-center" : ""
         }`}
       >
-        {collapsed ? (
+        {isCollapsed ? (
           <PanelLeftOpen className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden="true" />
         ) : (
           <>
             <PanelLeftClose className="h-[18px] w-[18px]" strokeWidth={2.25} aria-hidden="true" />
-            Collapse
+            <span>{isPinned ? "Unpin" : "Pin"}</span>
           </>
         )}
       </button>
