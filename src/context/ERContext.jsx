@@ -88,6 +88,7 @@ export function ERProvider({ children }) {
     } catch (e) {
       console.warn("Failed to persist operationalState to localStorage:", e);
     }
+    updatePredictions(newState);
   };
 
 function generateDemoPredictions(state) {
