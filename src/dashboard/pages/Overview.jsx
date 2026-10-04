@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   Activity,
@@ -716,16 +717,16 @@ export default function Overview() {
       </div>
 
       {/* EXPLAINABILITY MODAL (TreeSHAP Feature Attributions) */}
-      {activeModal && (
+      {activeModal && createPortal(
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-navy/70 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-navy/70 p-4 backdrop-blur-md"
           onClick={() => setActiveModal(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl relative z-[10000]"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl relative z-[100000] border border-border/40"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
+            <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-4">
               <div className="flex items-center gap-2">
                 <HelpCircle className="h-5 w-5 text-blue" />
                 <h3 className="text-[16px] font-bold text-navy">
@@ -735,13 +736,13 @@ export default function Overview() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="rounded-lg p-1 text-navy-soft hover:bg-bg hover:text-navy"
+                className="rounded-lg p-1 text-navy-soft hover:bg-bg hover:text-navy transition-colors cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <p className="text-[13px] text-navy-soft mb-4">
+            <p className="text-[13px] text-navy-soft mb-4 font-medium">
               TreeSHAP feature attributions explaining model output contribution factors:
             </p>
 
@@ -765,28 +766,30 @@ export default function Overview() {
                     { feature: "Occupancy Percent", contribution: 24.1, direction: "increases_risk" },
                     { feature: "Patients Waiting", contribution: 19.3, direction: "increases_risk" },
                     { feature: "Arrival Rate", contribution: 14.0, direction: "increases_risk" },
+                    { feature: "Staff Total", contribution: -3.5, direction: "decreases_risk" },
                   ]
               ).map((feat, idx) => (
-                <div key={idx} className="flex items-center justify-between rounded-xl bg-bg px-3.5 py-2.5 text-[13px]">
+                <div key={idx} className="flex items-center justify-between rounded-xl bg-bg/80 px-4 py-3 text-[13.5px]">
                   <span className="font-semibold text-navy">{feat.feature}</span>
-                  <span className={`font-mono font-bold ${feat.contribution >= 0 ? "text-amber-dark" : "text-teal"}`}>
+                  <span className={`font-mono font-bold ${feat.contribution >= 0 ? "text-navy" : "text-teal"}`}>
                     {feat.contribution >= 0 ? `+${feat.contribution}` : feat.contribution}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="mt-5 flex justify-end">
+            <div className="mt-6 flex justify-end">
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="rounded-xl bg-navy px-4 py-2 text-[13px] font-semibold text-white hover:bg-navy-dark"
+                className="rounded-xl bg-navy px-6 py-2.5 text-[13px] font-bold text-white shadow-soft hover:bg-navy-dark transition-all cursor-pointer"
               >
                 Close
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* TECHNOLOGICAL & MODEL ENGINE HEALTH STATUS */}
