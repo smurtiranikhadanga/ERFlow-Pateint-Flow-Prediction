@@ -219,6 +219,7 @@ export default function Overview() {
             trend: "Predictions Pending",
             trendDirection: "down",
             tone: "amber",
+            onExplain: () => setActiveModal("waiting_time"),
           },
           {
             id: "crowding",
@@ -227,9 +228,45 @@ export default function Overview() {
             trend: "Predictions Pending",
             trendDirection: "down",
             tone: "amber",
+            onExplain: () => setActiveModal("crowding_risk"),
           },
         ]
-    : MOCK_SUMMARY_CARDS.slice(0, 4);
+    : [
+        {
+          id: "occupancy",
+          label: "Current ER Occupancy",
+          value: `${operationalState.occupancy_percent}%`,
+          trend: "+6% vs. baseline",
+          trendDirection: "up",
+          tone: "blue",
+        },
+        {
+          id: "waiting",
+          label: "Patients Waiting",
+          value: `${operationalState.patients_waiting}`,
+          trend: "5 pending triage",
+          trendDirection: "up",
+          tone: "teal",
+        },
+        {
+          id: "wait-time",
+          label: "Expected Wait Time",
+          value: "42 min",
+          trend: "Increasing trend",
+          trendDirection: "up",
+          tone: "amber",
+          onExplain: () => setActiveModal("waiting_time"),
+        },
+        {
+          id: "crowding",
+          label: "Current Crowding Level",
+          value: "HIGH",
+          trend: "Score: 78/100",
+          trendDirection: "up",
+          tone: "amber",
+          onExplain: () => setActiveModal("crowding_risk"),
+        },
+      ];
 
   const secondaryDemandCards = isRealMode
     ? data
@@ -618,13 +655,21 @@ export default function Overview() {
 
             <div className="flex flex-col gap-2.5">
               {(activeModal === "waiting_time"
-                ? data?.waiting_time?.explanation?.top_contributing_features || [
+                ? data?.waiting_time?.explanation?.top_contributing_features ||
+                  data?.waiting_time?.explanation?.top_factors?.map((f) => ({
+                    feature: f.feature,
+                    contribution: f.shap_value !== undefined ? Math.round(f.shap_value * 10) / 10 : Math.round(f.importance * 20),
+                  })) || [
                     { feature: "Patients Waiting", contribution: 18.4, direction: "increases_wait" },
                     { feature: "Arrival Rate", contribution: 12.1, direction: "increases_wait" },
                     { feature: "Occupancy Percent", contribution: 8.5, direction: "increases_wait" },
                     { feature: "Staff Total", contribution: -4.2, direction: "decreases_wait" },
                   ]
-                : data?.crowding_risk?.explanation?.top_contributing_features || [
+                : data?.crowding_risk?.explanation?.top_contributing_features ||
+                  data?.crowding_risk?.explanation?.top_factors?.map((f) => ({
+                    feature: f.feature,
+                    contribution: f.shap_value !== undefined ? Math.round(f.shap_value * 10) / 10 : Math.round(f.importance * 30),
+                  })) || [
                     { feature: "Occupancy Percent", contribution: 24.1, direction: "increases_risk" },
                     { feature: "Patients Waiting", contribution: 19.3, direction: "increases_risk" },
                     { feature: "Arrival Rate", contribution: 14.0, direction: "increases_risk" },
