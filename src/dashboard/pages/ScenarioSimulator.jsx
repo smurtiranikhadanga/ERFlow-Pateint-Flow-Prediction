@@ -160,9 +160,8 @@ function computeDemoPredictions(controls) {
 
 export default function ScenarioSimulator() {
   const { isRealMode, isDemoMode } = useMode();
-  const { predictions, operationalState } = useERContext();
+  const { predictions, operationalState, setOperationalState } = useERContext();
 
-  const BASELINE_STATE = operationalState;
   const [baselineData, setBaselineData] = useState(predictions);
   const [scenarioData, setScenarioData] = useState(null);
   const [loadingScenario, setLoadingScenario] = useState(false);
@@ -172,10 +171,10 @@ export default function ScenarioSimulator() {
   // Form Controls State initialized to Central ER State Baseline
   const [scenarioControls, setScenarioControls] = useState(operationalState);
 
-  // Sync scenarioControls and baselineData when operationalState or predictions change
+  // Sync baselineData directly with live ERContext predictions & operationalState
   useEffect(() => {
     let isMounted = true;
-    async function initBaseline() {
+    async function updateBaseline() {
       if (predictions) {
         setBaselineData(predictions);
       } else {
@@ -188,15 +187,11 @@ export default function ScenarioSimulator() {
             if (isMounted) setBaselineData(res);
           }
         } catch {
-          // If baseline fetch fails, keep baseline as null
+          // If baseline fetch fails, keep baseline null
         }
       }
     }
-    initBaseline();
-    if (activePreset === "custom") {
-      setScenarioControls(operationalState);
-      analyzeScenario(operationalState);
-    }
+    updateBaseline();
     return () => { isMounted = false; };
   }, [isRealMode, predictions, operationalState]);
 
@@ -229,6 +224,10 @@ export default function ScenarioSimulator() {
     setActivePreset("custom");
     setScenarioControls(operationalState);
     analyzeScenario(operationalState);
+  };
+
+  const applyAsCentralBaseline = () => {
+    setOperationalState(scenarioControls);
   };
 
   const handlePresetSelect = (presetKey) => {
@@ -396,6 +395,15 @@ export default function ScenarioSimulator() {
                 <p className="text-[11.5px] font-semibold text-navy-soft">Surge Status</p>
                 <p className="mt-1 text-[13px] font-bold text-navy">{curSurge}</p>
               </div>
+
+              <button
+                type="button"
+                onClick={applyAsCentralBaseline}
+                className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-teal/40 bg-teal-tint px-3.5 py-2.5 text-[12.5px] font-bold text-teal-dark hover:bg-teal hover:text-white transition-all shadow-sm"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                <span>Apply Scenario as Central Baseline</span>
+              </button>
             </div>
           </div>
         </div>
