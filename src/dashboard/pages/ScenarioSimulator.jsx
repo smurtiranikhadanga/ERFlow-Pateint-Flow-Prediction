@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   ArrowDownRight,
+  CheckCircle2,
   Clock,
   Cpu,
   Flame,
@@ -270,7 +271,7 @@ export default function ScenarioSimulator() {
   const curSurge = baselineData?.surge_detection?.status ?? "--";
   const scnSurge = scenarioData?.surge_detection?.status ?? "--";
 
-  const curArr = BASELINE_STATE.arrival_rate;
+  const curArr = operationalState?.arrival_rate ?? 28;
   const scnArr = scenarioControls.arrival_rate;
   const diffArr = scnArr - curArr;
 
