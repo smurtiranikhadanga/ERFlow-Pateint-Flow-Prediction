@@ -24,6 +24,18 @@ from .text_splitter import TextChunk
 
 logger = logging.getLogger("erflow.rag.vector_store")
 
+# Safe module-level import of ChromaDB
+try:
+    import chromadb
+    from chromadb.config import Settings as ChromaSettings
+    from chromadb.utils import embedding_functions
+    CHROMADB_AVAILABLE = True
+except ImportError:
+    chromadb = None
+    ChromaSettings = None
+    embedding_functions = None
+    CHROMADB_AVAILABLE = False
+
 
 class VectorStore:
     """
@@ -44,7 +56,7 @@ class VectorStore:
         
         self.chroma_client = None
         self.collection = None
-        self._use_fallback = False
+        self._use_fallback = not CHROMADB_AVAILABLE
         
         # Fallback storage objects (TF-IDF vectorizer if ChromaDB is unavailable)
         self.fallback_chunks: List[TextChunk] = []
@@ -78,11 +90,12 @@ class VectorStore:
         target_collection_name = collection_name or self.collection_name
         self.collection_name = target_collection_name
 
-        try:
-            import chromadb
-            from chromadb.config import Settings as ChromaSettings
-            from chromadb.utils import embedding_functions
+        if not CHROMADB_AVAILABLE or chromadb is None:
+            logger.info("[VectorStore] ChromaDB module unavailable. Activating high-performance in-memory TF-IDF vector engine.")
+            self._use_fallback = True
+            return None
 
+        try:
             self.chroma_client = chromadb.PersistentClient(
                 path=str(self.persist_dir),
                 settings=ChromaSettings(anonymized_telemetry=False)
