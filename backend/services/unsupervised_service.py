@@ -107,8 +107,8 @@ class UnsupervisedService:
             deviation = ((current_rate - baseline_mid) / baseline_mid) * 100.0
             dev_str = f"{'+' if deviation >= 0 else ''}{round(deviation)}%"
 
-            # Anomaly threshold check (distance > 1.4 or arrival rate significantly exceeding baseline or high occupancy)
-            is_surge = bool(current_rate > normal_max * 1.3 or min_dist > 1.4 or state.occupancy_percent > 88.0)
+            # Anomaly threshold check (distance > 2.8 or arrival rate significantly exceeding baseline or high occupancy)
+            is_surge = bool(current_rate > normal_max * 1.25 or min_dist > 2.8 or state.occupancy_percent > 88.0)
 
             if is_surge:
                 status = "ANOMALOUS SURGE DETECTED"

@@ -107,6 +107,10 @@ class ArtifactLoader:
         # Reference Dataset Buffer
         self.dataset_df = None
         self.is_loaded = False
+        try:
+            self.load_all()
+        except Exception as e:
+            logger.warning(f"[ArtifactLoader] Initial load note: {e}")
 
     def load_all(self):
         """Load all model artifacts into memory."""

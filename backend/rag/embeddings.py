@@ -38,8 +38,9 @@ class EmbeddingEngine:
     def load_model(self):
         """
         Lazily loads the SentenceTransformer model into memory if not already initialized.
+        Falls back to normalized feature hashing if SentenceTransformers is unavailable.
         """
-        if self._is_loaded and self._model is not None:
+        if self._is_loaded:
             return self._model
 
         logger.info(f"[EmbeddingEngine] Lazily loading SentenceTransformer model '{self.model_name}'...")
@@ -52,8 +53,9 @@ class EmbeddingEngine:
                 f"Vector dimension: {self.dimension}"
             )
         except Exception as e:
-            logger.error(f"[EmbeddingEngine] Failed to load SentenceTransformer model '{self.model_name}': {e}")
-            raise RuntimeError(f"Embedding model initialization failed: {e}") from e
+            logger.warning(f"[EmbeddingEngine] SentenceTransformer unavailable ({e}). Operating in lightweight feature-hashing vector mode.")
+            self._model = None
+            self._is_loaded = True
 
         return self._model
 
@@ -77,6 +79,20 @@ class EmbeddingEngine:
                 pass
         return self.target_dimension
 
+    def _fallback_embed(self, text: str) -> List[float]:
+        """Generates a normalized 384-dimensional feature hash vector for text."""
+        words = [w.strip().lower() for w in text.split() if w.strip()]
+        if not words:
+            return [0.0] * self.dimension
+        vec = np.zeros(self.dimension, dtype=np.float32)
+        for w in words:
+            idx = abs(hash(w)) % self.dimension
+            vec[idx] += 1.0
+        norm = np.linalg.norm(vec)
+        if norm > 0:
+            vec = vec / norm
+        return vec.tolist()
+
     def embed_text(self, text: str) -> List[float]:
         """
         Generates a normalized embedding vector for a single text string.
@@ -91,6 +107,9 @@ class EmbeddingEngine:
             return [0.0] * self.dimension
 
         model = self.load_model()
+        if model is None:
+            return self._fallback_embed(text)
+
         vector = model.encode(text.strip(), convert_to_numpy=True, normalize_embeddings=True)
         return vector.tolist()
 
@@ -110,6 +129,8 @@ class EmbeddingEngine:
 
         clean_texts = [t.strip() if t and t.strip() else " " for t in texts]
         model = self.load_model()
+        if model is None:
+            return [self._fallback_embed(t) for t in clean_texts]
         
         vectors = model.encode(
             clean_texts,
