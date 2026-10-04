@@ -89,14 +89,14 @@ import { useERContext } from "../../context/ERContext";
  * that logically respond to all 8 operational variables.
  */
 function computeDemoPredictions(controls) {
-  const arr = controls.arrival_rate ?? 28;
-  const occ = controls.occupancy_percent ?? 78;
-  const wait = controls.patients_waiting ?? 24;
-  const beds = controls.available_beds ?? 8;
-  const docs = controls.available_doctors ?? 5;
-  const nurses = controls.available_nurses ?? 9;
-  const acuity = controls.severity_level ?? 3.0;
-  const hour = controls.hour_of_day ?? 18;
+  const arr = Number(controls.arrival_rate ?? 28);
+  const occ = Number(controls.occupancy_percent ?? 78);
+  const wait = Number(controls.patients_waiting ?? 24);
+  const beds = Number(controls.available_beds ?? 8);
+  const docs = Number(controls.available_doctors ?? 5);
+  const nurses = Number(controls.available_nurses ?? 9);
+  const acuity = Number(controls.severity_level ?? 3.0);
+  const hour = Number(controls.hour_of_day ?? 18);
 
   const totalStaff = Math.max(1, docs + nurses);
   const ptsPerStaff = wait / totalStaff;
@@ -242,11 +242,9 @@ export default function ScenarioSimulator() {
 
   const updateControl = (field, val) => {
     setActivePreset("custom");
-    setScenarioControls((prev) => {
-      const updated = { ...prev, [field]: val };
-      analyzeScenario(updated);
-      return updated;
-    });
+    const updated = { ...scenarioControls, [field]: val };
+    setScenarioControls(updated);
+    analyzeScenario(updated);
   };
 
   // Extract Comparative Metrics (Baseline vs Scenario)
