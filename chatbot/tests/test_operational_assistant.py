@@ -14,13 +14,31 @@ from app.ml_service.model_adapters import (
 import joblib
 from pathlib import Path
 
-ml_dir = Path(r"d:\Downloads\erflow_project\ml_model\supervised")
-ml_unsup_dir = Path(r"d:\Downloads\erflow_project\ml_model\unsupervised")
-ml_dl_dir = Path(r"d:\Downloads\erflow_project\ml_model\deep_learning")
+# Resolve artifact directories relative to the repo root
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+ml_dir = _REPO_ROOT / "backend" / "artifacts" / "supervised"
+ml_unsup_dir = _REPO_ROOT / "backend" / "artifacts" / "unsupervised"
+ml_dl_dir = _REPO_ROOT / "backend" / "artifacts" / "deep_learning"
+
+_SUPERVISED_AVAILABLE = (
+    (ml_dir / "final_xgb_regressor.pkl").exists()
+    and (ml_dir / "final_xgb_classifier.pkl").exists()
+    and (ml_dir / "preprocessor_reg.pkl").exists()
+    and (ml_dir / "label_encoder.pkl").exists()
+)
+_UNSUPERVISED_AVAILABLE = (
+    (ml_unsup_dir / "kmeans_model.joblib").exists()
+    and (ml_unsup_dir / "pca_model.joblib").exists()
+    and (ml_unsup_dir / "unsupervised_scaler.joblib").exists()
+)
+_ALL_ARTIFACTS_AVAILABLE = _SUPERVISED_AVAILABLE and _UNSUPERVISED_AVAILABLE
 
 
 @pytest.fixture(autouse=True)
 def setup_models():
+    if not _ALL_ARTIFACTS_AVAILABLE:
+        pytest.skip("Trained ML artifact files not present (expected in CI environment without model binaries)")
+
     reg_model = joblib.load(ml_dir / "final_xgb_regressor.pkl")
     cls_model = joblib.load(ml_dir / "final_xgb_classifier.pkl")
     prep_scaler = joblib.load(ml_dir / "preprocessor_reg.pkl")

@@ -8,7 +8,21 @@ from app.ml_service.model_adapters import (
 import joblib
 from pathlib import Path
 
-ml_dir = Path(r"d:\Downloads\erflow_project\ml_model\supervised")
+# Resolve the supervised artifact directory relative to the repo root
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+ml_dir = _REPO_ROOT / "backend" / "artifacts" / "supervised"
+
+_ARTIFACTS_AVAILABLE = (
+    (ml_dir / "final_xgb_regressor.pkl").exists()
+    and (ml_dir / "final_xgb_classifier.pkl").exists()
+    and (ml_dir / "preprocessor_reg.pkl").exists()
+    and (ml_dir / "label_encoder.pkl").exists()
+)
+
+pytestmark = pytest.mark.skipif(
+    not _ARTIFACTS_AVAILABLE,
+    reason="Trained ML artifact files not present (expected in CI environment without model binaries)",
+)
 
 
 @pytest.fixture

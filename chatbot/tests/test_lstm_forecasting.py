@@ -1,7 +1,17 @@
 import pytest
 import numpy as np
+from pathlib import Path
 from app.schemas.prediction_schema import PredictionInputData
 from app.ml_service.model_registry import model_registry
+
+# Skip the entire module when the LSTM artifact is not present (CI without model binaries)
+_REPO_ROOT = Path(__file__).resolve().parents[2]
+_LSTM_ARTIFACT = _REPO_ROOT / "backend" / "artifacts" / "deep_learning" / "er_patient_arrival_lstm.keras"
+
+pytestmark = pytest.mark.skipif(
+    not _LSTM_ARTIFACT.exists(),
+    reason="LSTM .keras artifact not present (expected in CI environment without model binaries)",
+)
 
 
 def test_lstm_model_registered_and_loaded():
