@@ -1,5 +1,5 @@
 services:
-  # 1. FastAPI Backend ML & Chatbot Service
+  # 1. FastAPI Backend ML & Chatbot Service (Render Cloud)
   - type: web
     name: erflow-backend
     env: python
@@ -12,8 +12,10 @@ services:
         value: 3.10.11
       - key: PYTHONPATH
         value: .
+      - key: ALLOWED_ORIGINS
+        value: "*"
 
-  # 2. React + Vite Dashboard Static Site
+  # 2. React + Vite Dashboard Static Site (Optional backup on Render; Primary frontend is on Vercel)
   - type: web
     name: erflow-frontend
     env: static
@@ -24,3 +26,4 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
+
