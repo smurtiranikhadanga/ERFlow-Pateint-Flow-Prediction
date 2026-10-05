@@ -8,10 +8,9 @@ extraction, metadata preservation, and error handling for the ERFlow RAG pipelin
 Isolated from FastAPI server startup and ML prediction routines.
 """
 
-import os
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 
 from .config import rag_settings
 
@@ -65,8 +64,8 @@ class DocumentLoader:
 
     SUPPORTED_EXTENSIONS = {".md", ".txt", ".pdf"}
 
-    def __init__(self, docs_dir: Optional[Path] = None):
-        self.docs_dir = docs_dir or rag_settings.KNOWLEDGE_BASE_DIR
+    def __init__(self, docs_dir: Optional[Union[Path, str]] = None):
+        self.docs_dir = Path(docs_dir) if docs_dir else rag_settings.KNOWLEDGE_BASE_DIR
         self.auto_ingest_on_startup = False  # Explicit safety flag: No startup auto-ingest
 
     def load_documents(self) -> List[Document]:
@@ -109,10 +108,11 @@ class DocumentLoader:
         logger.info(f"[DocumentLoader] Successfully ingested {len(documents)} / {len(all_files)} documents.")
         return documents
 
-    def load_single_file(self, file_path: Path) -> Optional[Document]:
+    def load_single_file(self, file_path: Union[Path, str]) -> Optional[Document]:
         """
         Ingests a single file with format-specific text extraction and error recovery.
         """
+        file_path = Path(file_path)
         if not file_path.exists() or not file_path.is_file():
             logger.warning(f"[DocumentLoader] Target file does not exist or is invalid: {file_path}")
             return None
@@ -148,13 +148,20 @@ class DocumentLoader:
 
         for enc in encodings_to_try:
             try:
-                with open(file_path, "r", encoding=enc, errors="replace") as f:
+                with open(file_path, "r", encoding=enc, errors="strict") as f:
                     content = f.read()
                 break
             except UnicodeDecodeError:
                 continue
             except Exception as e:
                 logger.error(f"[DocumentLoader] Encoding read error for {file_path.name} ({enc}): {e}")
+
+        if content is None:
+            try:
+                with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                    content = f.read()
+            except Exception as e:
+                logger.error(f"[DocumentLoader] Fallback read error for {file_path.name}: {e}")
 
         if not content or not content.strip():
             logger.warning(f"[DocumentLoader] File yielded no readable text content: {file_path.name}")
@@ -176,7 +183,7 @@ class DocumentLoader:
     def _extract_pdf_file(self, file_path: Path, file_size: int, doc_title: str) -> Optional[Document]:
         """Extracts text content from PDF documents page by page."""
         try:
-            import pypdf
+            import pypdf  # type: ignore
             reader = pypdf.PdfReader(str(file_path))
             page_texts = []
             page_count = len(reader.pages)

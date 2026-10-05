@@ -3,10 +3,6 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  Cpu,
-  Database,
-  FileCheck,
   RefreshCw,
   ShieldAlert,
   Server,
@@ -107,6 +103,7 @@ export default function ModelMonitoring() {
     fetchReport();
     const interval = setInterval(fetchReport, 5000);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRealMode]);
 
   const models = data?.models ? Object.values(data.models) : [];

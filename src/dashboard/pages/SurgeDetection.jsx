@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { AlertOctagon, AlertTriangle, CalendarClock, Info, Play, RefreshCw, Sliders, TrendingUp } from "lucide-react";
+import { AlertOctagon, AlertTriangle, CalendarClock, Info, RefreshCw, TrendingUp } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import ChartCard from "../components/ChartCard";
 import MetricCard from "../components/MetricCard";
@@ -7,8 +6,6 @@ import StatusBadge from "../components/StatusBadge";
 import ModelBadge from "../components/ModelBadge";
 import MLContextCard from "../components/MLContextCard";
 import AnomalyTimeline from "../components/AnomalyTimeline";
-import StepperControl from "../components/StepperControl";
-import { erflowApi } from "../../services/api";
 import {
   SURGE_STATUS as MOCK_STATUS,
   RECENT_SURGE_EVENTS as MOCK_EVENTS,
@@ -47,7 +44,7 @@ import { useERContext } from "../../context/ERContext";
 
 export default function SurgeDetection() {
   const { isRealMode, isDemoMode } = useMode();
-  const { predictions, operationalState, loading, error, updatePredictions } = useERContext();
+  const { predictions, operationalState, loading: _loading, error, updatePredictions } = useERContext();
 
   const data = isRealMode ? predictions?.surge_detection || null : null;
 

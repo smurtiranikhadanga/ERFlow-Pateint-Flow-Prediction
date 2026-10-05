@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Activity, AlertTriangle, PieChart, Play, RefreshCw, ScatterChart, Sliders } from "lucide-react";
+import { Activity, AlertTriangle, PieChart, RefreshCw, ScatterChart } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import ChartCard from "../components/ChartCard";
 import StatusBadge from "../components/StatusBadge";
@@ -7,8 +6,6 @@ import ModelBadge from "../components/ModelBadge";
 import MLContextCard from "../components/MLContextCard";
 import ClusterScatter from "../components/ClusterScatter";
 import BarList from "../components/BarList";
-import StepperControl from "../components/StepperControl";
-import { erflowApi } from "../../services/api";
 import {
   CURRENT_PATTERN as MOCK_CURRENT,
   FLOW_PATTERN_CARDS as MOCK_CARDS,
@@ -83,7 +80,7 @@ import { useERContext } from "../../context/ERContext";
 
 export default function FlowPatterns() {
   const { isRealMode, isDemoMode } = useMode();
-  const { predictions, operationalState, loading, error, updatePredictions } = useERContext();
+  const { predictions, operationalState, loading: _loading, error, updatePredictions } = useERContext();
 
   const data = isRealMode ? predictions?.flow_pattern || null : null;
 

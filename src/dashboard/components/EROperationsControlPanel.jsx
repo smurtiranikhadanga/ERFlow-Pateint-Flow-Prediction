@@ -2,10 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Sliders, RefreshCw, CheckCircle2, Play, Activity, Cpu } from "lucide-react";
 import StepperControl from "./StepperControl";
 import { useERContext } from "../../context/ERContext";
-import { useMode } from "../../context/ModeContext";
-
 export default function EROperationsControlPanel({ className = "" }) {
-  const { isRealMode } = useMode();
   const {
     operationalState,
     setOperationalState,

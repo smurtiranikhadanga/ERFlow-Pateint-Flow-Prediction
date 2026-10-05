@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { SlidersHorizontal, Play, RotateCcw, AlertCircle } from "lucide-react";
+import { SlidersHorizontal, Play, RotateCcw } from "lucide-react";
 import StepperControl from "./StepperControl";
 
 export const DEFAULT_HOSPITAL_STATE = {

@@ -4,7 +4,6 @@ import {
   AlertTriangle,
   BookOpen,
   Bot,
-  CheckCircle2,
   ChevronDown,
   Clock,
   Cpu,
@@ -51,7 +50,7 @@ const TOPIC_CATEGORIES = [
   { label: "Demand Forecasts", query: "What is the expected patient volume?", icon: TrendingUp },
 ];
 
-function MLPredictionCard({ data, intent, confidence, timestamp }) {
+function MLPredictionCard({ data, intent, _confidence, _timestamp }) {
   const { isRealMode } = useMode();
   if (!data || typeof data !== "object") return null;
 

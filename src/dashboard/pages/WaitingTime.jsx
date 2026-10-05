@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -21,7 +20,6 @@ import StatusBadge from "../components/StatusBadge";
 import ModelBadge from "../components/ModelBadge";
 import TrendChart from "../components/TrendChart";
 import MLContextCard from "../components/MLContextCard";
-import { erflowApi } from "../../services/api";
 import { WAITING_TIME_STATUS as MOCK_STATUS } from "../mockData";
 import { useMode } from "../../context/ModeContext";
 
@@ -137,7 +135,7 @@ import { useERContext } from "../../context/ERContext";
 
 export default function WaitingTime() {
   const { isRealMode, isDemoMode } = useMode();
-  const { predictions, operationalState, loading, error, updatePredictions } = useERContext();
+  const { predictions, operationalState, loading: _loading, error, updatePredictions } = useERContext();
 
   const data = isRealMode ? predictions?.waiting_time || null : null;
   const currentOperationalState = operationalState;

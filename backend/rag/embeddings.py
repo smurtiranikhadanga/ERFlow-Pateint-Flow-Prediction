@@ -15,12 +15,25 @@ Features:
 """
 
 import logging
+import re
+import zlib
 from typing import List, Union, Optional
 import numpy as np
 
 from .config import rag_settings
 
 logger = logging.getLogger("erflow.rag.embeddings")
+
+STOP_WORDS = {
+    "a", "about", "after", "all", "an", "and", "any", "are", "as", "at", "be",
+    "been", "being", "but", "by", "can", "could", "did", "do", "does", "for",
+    "from", "had", "has", "have", "he", "her", "his", "how", "i", "if", "in",
+    "into", "is", "it", "its", "may", "might", "more", "most", "not", "of", "on",
+    "one", "or", "other", "our", "out", "should", "so", "some", "that", "the",
+    "their", "them", "then", "there", "these", "they", "this", "those", "to",
+    "under", "up", "was", "we", "were", "what", "when", "where", "which", "who",
+    "whom", "will", "with", "would", "you", "your"
+}
 
 
 class EmbeddingEngine:
@@ -45,7 +58,7 @@ class EmbeddingEngine:
 
         logger.info(f"[EmbeddingEngine] Lazily loading SentenceTransformer model '{self.model_name}'...")
         try:
-            from sentence_transformers import SentenceTransformer
+            from sentence_transformers import SentenceTransformer  # type: ignore
             self._model = SentenceTransformer(self.model_name)
             self._is_loaded = True
             logger.info(
@@ -81,12 +94,16 @@ class EmbeddingEngine:
 
     def _fallback_embed(self, text: str) -> List[float]:
         """Generates a normalized 384-dimensional feature hash vector for text."""
-        words = [w.strip().lower() for w in text.split() if w.strip()]
-        if not words:
+        all_tokens = re.findall(r'\b[a-z0-9]+\b', text.lower())
+        if not all_tokens:
             return [0.0] * self.dimension
+        
+        content_tokens = [t for t in all_tokens if t not in STOP_WORDS]
+        tokens_to_use = content_tokens if content_tokens else all_tokens
+
         vec = np.zeros(self.dimension, dtype=np.float32)
-        for w in words:
-            idx = abs(hash(w)) % self.dimension
+        for t in tokens_to_use:
+            idx = zlib.crc32(t.encode("utf-8")) % self.dimension
             vec[idx] += 1.0
         norm = np.linalg.norm(vec)
         if norm > 0:

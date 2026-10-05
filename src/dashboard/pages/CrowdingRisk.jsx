@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   BedDouble,
@@ -18,7 +17,6 @@ import StatusBadge, { LEVEL_TONE } from "../components/StatusBadge";
 import ModelBadge from "../components/ModelBadge";
 import BarList from "../components/BarList";
 import MLContextCard from "../components/MLContextCard";
-import { erflowApi } from "../../services/api";
 import { useMode } from "../../context/ModeContext";
 import {
   CROWDING_RISK_SUMMARY as MOCK_SUMMARY,
@@ -207,7 +205,7 @@ import { useERContext } from "../../context/ERContext";
 
 export default function CrowdingRisk() {
   const { isRealMode, isDemoMode } = useMode();
-  const { predictions, operationalState, loading, error, updatePredictions } = useERContext();
+  const { predictions, operationalState, loading: _loading, error, updatePredictions } = useERContext();
 
   const data = isRealMode ? predictions?.crowding_risk || null : null;
 

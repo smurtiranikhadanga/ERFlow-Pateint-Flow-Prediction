@@ -1,27 +1,17 @@
 import { useEffect, useState } from "react";
 import {
-  Activity,
   AlertTriangle,
   ArrowRight,
   ArrowUpRight,
   ArrowDownRight,
   CheckCircle2,
-  Clock,
-  Cpu,
-  Flame,
-  Layers,
-  Play,
   RefreshCw,
   RotateCcw,
-  ShieldAlert,
   Sparkles,
-  TrendingUp,
-  Users,
   Zap,
 } from "lucide-react";
 import PageHeader from "../components/PageHeader";
-import MetricCard from "../components/MetricCard";
-import StatusBadge, { LEVEL_TONE } from "../components/StatusBadge";
+import StatusBadge from "../components/StatusBadge";
 import ModelBadge from "../components/ModelBadge";
 import StepperControl from "../components/StepperControl";
 import { erflowApi } from "../../services/api";
@@ -219,6 +209,7 @@ export default function ScenarioSimulator() {
   // Initial scenario run on mount or mode change
   useEffect(() => {
     analyzeScenario(scenarioControls);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRealMode]);
 
   const resetToCentralBaseline = () => {

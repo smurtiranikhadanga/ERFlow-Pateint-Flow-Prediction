@@ -36,7 +36,7 @@ Designed with a clean, high-contrast light theme color scheme:
 ## 📐 Project Architecture
 
 ```
-ER-Patient-Flow-Prediction/
+ERFlow-Pateint-Flow-Prediction/
 ├── backend/                        # FastAPI ML Inference Backend
 │   ├── main.py                     # Primary FastAPI application entry point & routes
 │   ├── rag/                        # RAG Subsystem
@@ -46,8 +46,8 @@ ER-Patient-Flow-Prediction/
 │   │   ├── text_splitter.py        # Section-aware sliding window document splitter
 │   │   ├── vector_store.py         # ChromaDB & TF-IDF fallback vector store
 │   │   └── retriever.py            # Semantic retrieval & context formatter
-│   ├── knowledge_base/             # Clinical guidelines & operational protocol documents
-│   └── models/                     # Saved ML model artifacts (.pkl, .onnx, .json)
+│   └── knowledge_base/             # Clinical guidelines & operational protocol documents
+├── ml_model/                       # Trained ML model artifacts (.pkl, .joblib, .h5, .json)
 ├── chatbot/                        # Chatbot Microservice & NLP Engine
 │   └── app/
 │       ├── chatbot/
@@ -71,7 +71,7 @@ ER-Patient-Flow-Prediction/
 ## 🚀 Quick Start Guide
 
 ### Prerequisites
-- **Python**: Version 3.10 or higher
+- **Python**: Version 3.11
 - **Node.js**: Version 18.0 or higher (`npm` included)
 
 ### 1. Environment Setup
@@ -79,19 +79,24 @@ ER-Patient-Flow-Prediction/
 ```bash
 # Clone the repository
 git clone https://github.com/smurtiranikhadanga/ERFlow-Pateint-Flow-Prediction.git
-cd ER-Patient-Flow-Prediction
+cd ERFlow-Pateint-Flow-Prediction
+
+# Copy environment template
+cp .env.example .env
 
 # Create and activate Python virtual environment
 python -m venv .venv
 # On Windows PowerShell:
 .\.venv\Scripts\Activate.ps1
+# On Linux/macOS:
+source .venv/bin/activate
 
-# Install backend dependencies
+# Install backend & chatbot dependencies
 pip install -r backend/requirements.txt
 pip install -r chatbot/requirements.txt
 
 # Install frontend dependencies
-npm install
+npm ci
 ```
 
 ### 2. Launching Services

@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react";
-import { AlertTriangle, Ambulance, CheckCircle2, Clock3, Database, Gauge, Layers, Play, RefreshCw, ShieldCheck, TrendingUp } from "lucide-react";
+import { useState } from "react";
+import { Ambulance, CheckCircle2, Clock3, Database, Gauge, Layers, RefreshCw, TrendingUp } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import ChartCard from "../components/ChartCard";
 import MetricCard from "../components/MetricCard";
 import StatusBadge from "../components/StatusBadge";
 import ModelBadge from "../components/ModelBadge";
 import TrendChart from "../components/TrendChart";
-import StepperControl from "../components/StepperControl";
-import { erflowApi } from "../../services/api";
-import { ARRIVAL_FORECAST_RANGES, FORECAST_CARDS as MOCK_CARDS, FORECAST_INSIGHTS as MOCK_INSIGHTS } from "../mockData";
+import { FORECAST_CARDS as MOCK_CARDS, FORECAST_INSIGHTS as MOCK_INSIGHTS } from "../mockData";
 import { useMode } from "../../context/ModeContext";
 
 const RANGE_OPTIONS = [
@@ -110,7 +108,7 @@ function getRangeSeries(apiData, selectedRange, currentRate = 28) {
 
 export default function PatientForecast() {
   const { isRealMode, isDemoMode } = useMode();
-  const { predictions, operationalState, loading, error, updatePredictions } = useERContext();
+  const { predictions, operationalState, loading: _loading, error, updatePredictions } = useERContext();
   const [range, setRange] = useState("24h");
   const [preset, setPreset] = useState("baseline");
 

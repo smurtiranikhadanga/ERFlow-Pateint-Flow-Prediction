@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Bell, Menu, PanelLeftOpen } from "lucide-react";
-import { NOTIFICATIONS, SYSTEM_STATUS } from "./mockData";
-import { erflowApi } from "../services/api";
+import { NOTIFICATIONS } from "./mockData";
 import { useMode } from "../context/ModeContext";
+import { erflowApi } from "../services/api";
 
 function useClock() {
   const [now, setNow] = useState(() => new Date());
@@ -88,7 +88,7 @@ function NotificationsMenu() {
 
 function SystemStatus() {
   const [status, setStatus] = useState({ ok: true, label: "Checking ML System...", loaded: false });
-  const { mode, toggleMode, isRealMode } = useMode();
+  const { mode: _mode, toggleMode, isRealMode } = useMode();
 
   useEffect(() => {
     let mounted = true;

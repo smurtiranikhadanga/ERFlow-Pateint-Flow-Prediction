@@ -96,8 +96,8 @@ class TextSplitter:
         if not doc or not doc.content or not doc.content.strip():
             return chunks
 
-        # 1. Section-aware splitting by major Markdown headers (##) with automatic merging of short preamble headers
-        raw_sections = re.split(r'\n(?=##\s)', doc.content)
+        # 1. Section-aware splitting by Markdown headers (# to ######) with automatic merging of short preamble headers
+        raw_sections = re.split(r'\n(?=#{1,6}\s)', doc.content)
         sections = []
         for s in raw_sections:
             s_clean = s.strip()

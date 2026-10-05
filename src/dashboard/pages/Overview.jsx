@@ -1,17 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   Activity,
   AlertTriangle,
-  ArrowRight,
   Bot,
-  CheckCircle2,
-  ChevronRight,
   Clock,
-  Gauge,
   HelpCircle,
-  Info,
   Layers,
   Percent,
   RefreshCw,
@@ -20,21 +15,16 @@ import {
   TrendingUp,
   Users,
   X,
-  Zap,
 } from "lucide-react";
 import PageCard from "../components/PageCard";
 import SummaryCard from "../components/SummaryCard";
 import TrendChart from "../components/TrendChart";
 import StatusBadge from "../components/StatusBadge";
-import ModelBadge from "../components/ModelBadge";
 import ModelStatusCard from "../components/ModelStatusCard";
 import PatientFlowJourney from "../components/PatientFlowJourney";
-import { erflowApi } from "../../services/api";
 import {
-  SUMMARY_CARDS as MOCK_SUMMARY_CARDS,
   ARRIVAL_FORECAST_SERIES as MOCK_SERIES,
   FORECAST_CARDS as MOCK_FORECAST_CARDS,
-  PREDICTED_PEAK as MOCK_PEAK,
   FLOW_SUMMARY as MOCK_FLOW,
   AI_SUMMARY_TEXT as MOCK_AI_TEXT,
 } from "../mockData";
@@ -146,7 +136,7 @@ function getAttentionRequiredObservations(data) {
 
 export default function Overview() {
   const { isRealMode, isDemoMode } = useMode();
-  const { predictions: data, loading, error, updatePredictions, operationalState } = useERContext();
+  const { predictions: data, loading: _loading, error, updatePredictions, operationalState } = useERContext();
   const [activeModal, setActiveModal] = useState(null); // 'waiting_time' | 'crowding_risk' | null
 
   const pressure = getOperationalPressure(data);
@@ -327,7 +317,7 @@ export default function Overview() {
       ];
 
   const forecastSeries = isRealMode ? data?.forecast?.series || null : MOCK_SERIES;
-  const forecastCards = isRealMode ? data?.forecast?.forecast_cards || null : MOCK_FORECAST_CARDS;
+  const _forecastCards = isRealMode ? data?.forecast?.forecast_cards || null : MOCK_FORECAST_CARDS;
   const flowSummary = isRealMode
     ? data
       ? {

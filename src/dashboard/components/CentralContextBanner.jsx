@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Activity, Sliders, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useERContext } from "../../context/ERContext";
 
-export default function CentralContextBanner({ moduleName = "Current Module" }) {
+export default function CentralContextBanner({ moduleName: _moduleName = "Current Module" }) {
   const { operationalState, lastUpdated, hasRunPredictions } = useERContext();
 
   return (

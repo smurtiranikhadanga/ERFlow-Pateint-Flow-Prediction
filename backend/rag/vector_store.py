@@ -16,7 +16,7 @@ Features:
 
 import logging
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 
 from .config import rag_settings
 from .embeddings import embedding_engine, EmbeddingEngine
@@ -26,9 +26,9 @@ logger = logging.getLogger("erflow.rag.vector_store")
 
 # Safe module-level import of ChromaDB
 try:
-    import chromadb
-    from chromadb.config import Settings as ChromaSettings
-    from chromadb.utils import embedding_functions
+    import chromadb  # type: ignore
+    from chromadb.config import Settings as ChromaSettings  # type: ignore
+    from chromadb.utils import embedding_functions  # type: ignore
     CHROMADB_AVAILABLE = True
 except ImportError:
     chromadb = None
@@ -45,11 +45,11 @@ class VectorStore:
     def __init__(
         self,
         collection_name: Optional[str] = None,
-        persist_dir: Optional[Path] = None,
+        persist_dir: Optional[Union[Path, str]] = None,
         embedder: Optional[EmbeddingEngine] = None,
     ):
         self.collection_name = collection_name or rag_settings.COLLECTION_NAME
-        self.persist_dir = persist_dir or rag_settings.VECTOR_STORE_DIR
+        self.persist_dir = Path(persist_dir) if persist_dir else rag_settings.VECTOR_STORE_DIR
         self.embedder = embedder or embedding_engine
         
         self.persist_dir.mkdir(parents=True, exist_ok=True)
@@ -158,7 +158,7 @@ class VectorStore:
         # 1. Update fallback TF-IDF vector store
         self.fallback_chunks = list(chunks)
         try:
-            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
             self.tfidf_vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
             self.tfidf_matrix = self.tfidf_vectorizer.fit_transform(documents)
             logger.info(f"[VectorStore] Indexed {len(chunks)} chunks into TF-IDF vector index.")
@@ -271,7 +271,7 @@ class VectorStore:
             return []
 
         import numpy as np
-        from sklearn.metrics.pairwise import cosine_similarity
+        from sklearn.metrics.pairwise import cosine_similarity  # type: ignore
         query_vec = self.tfidf_vectorizer.transform([query])
         similarities = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
 
