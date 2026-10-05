@@ -1,8 +1,13 @@
 # ERFlow — Emergency Department Demand Intelligence Platform
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://er-flow-pateint-flow-prediction-5qk.vercel.app/)
+
+> 🚀 **Live Web Application**: [https://er-flow-pateint-flow-prediction-5qk.vercel.app/](https://er-flow-pateint-flow-prediction-5qk.vercel.app/)
+
 ERFlow is a full-stack emergency department demand forecasting, crowding risk classification, anomaly surge detection, and retrieval-augmented domain guidance system. It combines **5 machine learning models**, an **in-memory & ChromaDB RAG vector store**, a **Direct NLP AI Assistant**, and a **custom-styled React dashboard**.
 
 ---
+
 
 ## 🌟 Key Capabilities & Features
 
