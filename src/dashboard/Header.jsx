@@ -93,24 +93,29 @@ function SystemStatus() {
 
   useEffect(() => {
     let mounted = true;
-    erflowApi
-      .checkHealth()
-      .then((data) => {
-        if (mounted) {
-          if (data.status === "healthy" && data.artifacts_loaded) {
-            setStatus({ ok: true, label: "All ML Systems Live", loaded: true });
-          } else {
-            setStatus({ ok: false, label: "ML Systems Degraded", loaded: true });
+    const verifyHealth = () => {
+      erflowApi
+        .checkHealth()
+        .then((data) => {
+          if (mounted) {
+            if (data.status === "healthy" && data.artifacts_loaded) {
+              setStatus({ ok: true, label: "All ML Systems Live", loaded: true });
+            } else {
+              setStatus({ ok: false, label: "ML Systems Degraded", loaded: true });
+            }
           }
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setStatus({ ok: false, label: "FastAPI Backend Offline", loaded: true });
-        }
-      });
+        })
+        .catch(() => {
+          if (mounted) {
+            setStatus({ ok: false, label: "FastAPI Backend Offline", loaded: true });
+          }
+        });
+    };
+    verifyHealth();
+    const interval = setInterval(verifyHealth, 10000);
     return () => {
       mounted = false;
+      clearInterval(interval);
     };
   }, []);
 

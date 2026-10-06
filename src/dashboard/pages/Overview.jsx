@@ -42,22 +42,31 @@ const SUMMARY_ICONS = {
 import EROperationsControlPanel from "../components/EROperationsControlPanel";
 import { useERContext } from "../../context/ERContext";
 
-function getOperationalPressure(data) {
-  if (!data) return { level: "--", tone: "blue", label: "PREDICTIONS PENDING" };
-  const crowding = data.crowding_risk?.crowding_level || "MODERATE";
-  const isSurge = data.surge_detection?.is_surge || false;
-  const occupancy = data.occupancy_percent || 78;
+function getOperationalPressure(data, operationalState) {
+  if (data) {
+    const crowding = data.crowding_risk?.crowding_level || "MODERATE";
+    const isSurge = data.surge_detection?.is_surge || false;
+    const occupancy = data.occupancy_percent ?? 78;
 
-  if (crowding === "CRITICAL" || (isSurge && occupancy >= 85)) {
-    return { level: "CRITICAL", tone: "red", label: "CRITICAL PRESSURE" };
+    if (crowding === "CRITICAL" || (isSurge && occupancy >= 85)) {
+      return { level: "CRITICAL", tone: "red", label: "CRITICAL PRESSURE" };
+    }
+    if (crowding === "HIGH" || isSurge || occupancy >= 75) {
+      return { level: "HIGH", tone: "red", label: "HIGH PRESSURE" };
+    }
+    if (crowding === "MODERATE" || occupancy >= 50) {
+      return { level: "MODERATE", tone: "amber", label: "MODERATE PRESSURE" };
+    }
+    return { level: "LOW", tone: "teal", label: "LOW PRESSURE" };
   }
-  if (crowding === "HIGH" || isSurge || occupancy >= 75) {
-    return { level: "HIGH", tone: "red", label: "HIGH PRESSURE" };
+  if (operationalState) {
+    const occ = Number(operationalState.occupancy_percent ?? 78);
+    const waitPts = Number(operationalState.patients_waiting ?? 24);
+    if (occ >= 85 || waitPts >= 35) return { level: "HIGH", tone: "red", label: "HIGH PRESSURE" };
+    if (occ >= 60 || waitPts >= 15) return { level: "MODERATE", tone: "amber", label: "MODERATE PRESSURE" };
+    return { level: "LOW", tone: "teal", label: "LOW PRESSURE" };
   }
-  if (crowding === "MODERATE" || occupancy >= 50) {
-    return { level: "MODERATE", tone: "blue", label: "MODERATE PRESSURE" };
-  }
-  return { level: "LOW", tone: "teal", label: "LOW PRESSURE" };
+  return { level: "MODERATE", tone: "amber", label: "MODERATE PRESSURE" };
 }
 
 function getModelConsensus(data) {
@@ -139,7 +148,7 @@ export default function Overview() {
   const { predictions: data, loading: _loading, error, updatePredictions, operationalState } = useERContext();
   const [activeModal, setActiveModal] = useState(null); // 'waiting_time' | 'crowding_risk' | null
 
-  const pressure = getOperationalPressure(data);
+  const pressure = getOperationalPressure(data, operationalState);
   const consensus = getModelConsensus(data);
   const observations = getAttentionRequiredObservations(data);
 
@@ -377,22 +386,28 @@ export default function Overview() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-bold border transition-colors ${
+            <div className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-bold border transition-all ${
               pressure.tone === "red" || pressure.level === "HIGH" || pressure.level === "CRITICAL"
-                ? "border-red-dark bg-red text-white shadow-[0_2px_10px_rgba(220,38,38,0.35)]"
-                : pressure.tone === "amber"
-                ? "border-amber/40 bg-amber-tint text-amber-dark shadow-soft"
-                : pressure.tone === "blue"
-                ? "border-blue/40 bg-blue-tint text-blue-dark shadow-soft"
-                : "border-teal/40 bg-teal-tint text-teal shadow-soft"
+                ? "border-red-400 bg-red-600 text-white shadow-[0_4px_16px_rgba(220,38,38,0.45)]"
+                : pressure.tone === "amber" || pressure.level === "MODERATE"
+                ? "border-amber-400 bg-amber-500/30 text-white shadow-[0_4px_16px_rgba(245,158,11,0.3)]"
+                : "border-[#5b86b6] bg-[#000f22]/90 text-white shadow-[0_4px_16px_rgba(0,15,34,0.6)]"
             }`}>
-              <ShieldAlert className={`h-4 w-4 shrink-0 ${pressure.tone === "red" || pressure.level === "HIGH" || pressure.level === "CRITICAL" ? "text-white" : ""}`} />
-              <span>CURRENT PRESSURE: {pressure.level}</span>
+              <ShieldAlert className={`h-4 w-4 shrink-0 ${
+                pressure.tone === "red" || pressure.level === "HIGH" || pressure.level === "CRITICAL"
+                  ? "text-white"
+                  : pressure.tone === "amber" || pressure.level === "MODERATE"
+                  ? "text-amber-300"
+                  : "text-[#c0e6fd]"
+              }`} />
+              <span className="tracking-wide text-white">
+                CURRENT PRESSURE: <span className="ml-1 text-white font-black underline decoration-2 underline-offset-2">{pressure.level}</span>
+              </span>
             </div>
 
             <Link
               to="/dashboard/ai-assistant"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#2F9D94] px-4 py-2.5 text-[13px] font-bold text-white shadow-soft hover:bg-[#025F67] transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-blue hover:bg-blue-dark border border-border-strong px-4 py-2.5 text-[13px] font-bold text-white shadow-soft transition-colors"
             >
               <Bot className="h-4 w-4" /> Ask ERFlow
             </Link>
