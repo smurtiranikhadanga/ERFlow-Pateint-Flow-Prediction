@@ -578,7 +578,7 @@ class NLPResponder:
             # Format clean citation
             sources_list = [c["source"] for c in (citations or []) if c.get("source")]
             unique_sources = list(dict.fromkeys(sources_list))
-            src_str = f"\n\n**Knowledge Base Source**: {', '.join(unique_sources)}" if unique_sources else ""
+            src_str = f"\n\n**Sources:** {', '.join(unique_sources)}" if unique_sources else ""
             return f"{combined}{src_str}"
 
         return None
@@ -640,7 +640,7 @@ class NLPResponder:
         # 8. Conversational Greetings
         if any(q_norm.startswith(g) for g in ["hi", "hello", "hey", "good morning", "good evening", "good afternoon"]):
             return (
-                "Hello! I am your AI-powered Emergency Room Patient Flow Operations Assistant.\n\n"
+                "Hello! I am your AI-powered Emergency Room Patient Flow Assistant.\n\n"
                 "I can provide direct answers for:\n"
                 "- **Live ER Operations**: Current patient counts, doctor & nurse staffing, available beds, occupancy %, and expected wait times.\n"
                 "- **Specific Wait Time Targets**: Target times for ESI Levels 1–5, door-to-provider benchmarks, and boarding limits.\n"

@@ -87,7 +87,17 @@ class QueryRouter:
 
         lower_text = text.lower().strip()
 
-        # 1. CATEGORY 2: Knowledge Base & Advisory Queries (ESI triage, surge policies, staffing ratios, waiting time reduction strategies)
+        # 1. CATEGORY 3: General Conversational & Informational Intents (Greetings, Help, Model Info, Project Info, Safety Refusals)
+        if intent_enum in self.CONVERSATIONAL_INTENTS:
+            logger.info(f"[QueryRouter] Query routed to CATEGORY 3 (GENERAL_CONVERSATIONAL) - Intent: {intent_enum.value}")
+            return QueryCategory.GENERAL_CONVERSATIONAL
+
+        # 2. CATEGORY 1: Real-Time ML Predictions (High priority for operational point-estimate queries)
+        if intent_enum in self.OPERATIONAL_INTENTS and confidence >= 0.50:
+            logger.info(f"[QueryRouter] Query routed to CATEGORY 1 (OPERATIONAL_PREDICTION) - Intent: {intent_enum.value}")
+            return QueryCategory.OPERATIONAL_PREDICTION
+
+        # 3. CATEGORY 2: Knowledge Base & Advisory Queries (ESI triage, surge policies, staffing ratios, waiting time reduction strategies)
         is_knowledge_or_advisory = (
             getattr(Intent, "KNOWLEDGE_QUERY", None) == intent_enum
             or any(re.search(pattern, lower_text) for pattern in self.KNOWLEDGE_PATTERNS)
@@ -97,7 +107,7 @@ class QueryRouter:
                     "how can", "how to", "how do", "ways to", "how would", "tips to",
                     "strategy", "strategies", "tactic", "tactics", "best practice",
                     "reduce", "decrease", "cut", "shorten", "minimize", "prevent",
-                    "causes of", "cause of", "why do", "why is", "why are", "explain",
+                    "causes of", "cause of", "why do", "explain",
                     "protocol", "policy", "guideline", "guidelines", "procedure",
                     "ratio", "staffing", "nurse", "doctor"
                 ]
@@ -106,16 +116,6 @@ class QueryRouter:
         if is_knowledge_or_advisory:
             logger.info(f"[QueryRouter] Query routed to CATEGORY 2 (KNOWLEDGE_BASE) - Knowledge/Advisory Query: '{text}'")
             return QueryCategory.KNOWLEDGE_BASE
-
-        # 2. CATEGORY 1: Real-Time ML Predictions (High priority for operational point-estimate queries)
-        if intent_enum in self.OPERATIONAL_INTENTS and confidence >= 0.50:
-            logger.info(f"[QueryRouter] Query routed to CATEGORY 1 (OPERATIONAL_PREDICTION) - Intent: {intent_enum.value}")
-            return QueryCategory.OPERATIONAL_PREDICTION
-
-        # 3. CATEGORY 3: General Conversational & Informational Intents (Greetings, Help, Model Info, Project Info, Safety Refusals)
-        if intent_enum in self.CONVERSATIONAL_INTENTS:
-            logger.info(f"[QueryRouter] Query routed to CATEGORY 3 (GENERAL_CONVERSATIONAL) - Intent: {intent_enum.value}")
-            return QueryCategory.GENERAL_CONVERSATIONAL
 
         # 4. Explicit Fallback: If intent is UNKNOWN or confidence is low, fall back safely to GENERAL_CONVERSATIONAL
         logger.info(f"[QueryRouter] Ambiguous or unknown query routed to fallback CATEGORY 3 (GENERAL_CONVERSATIONAL)")

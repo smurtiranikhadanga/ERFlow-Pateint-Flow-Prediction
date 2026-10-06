@@ -42,10 +42,14 @@ class SafetyGuard:
 
     # 1. Symptom Checking & Diagnosis Inquiries (Targeted to First-Person Acute Requests)
     DIAGNOSIS_PATTERNS = [
-        r"\b(diagnos(e|is)\s*(me|my)|do\s*i\s*have|what\s*(disease|illness|condition|infection)\s*(do\s*i\s*have|is\s*this))\b",
-        r"\b(i\s*(have|am\s*having|feel)\s*(chest\s*pain|shortness\s*of\s*breath|severe\s*headache|dizziness|fever|cough|nausea|vomiting|bleeding))\b",
+        r"\b(diagnos(e|is)\s*(me|my)?|do\s*i\s*have|what\s*(disease|illness|condition|infection)\s*(do\s*i\s*have|is\s*this)?)\b",
+        r"\b(i\s*(have|am\s*having|feel).*?(chest\s*pain|shortness\s*of\s*breath|severe\s*headache|dizziness|fever|cough|nausea|vomiting|bleeding))\b",
         r"\bmy\s*(chest|head|stomach|throat|arm|leg|abdomen|back|heart|eye)\s*(hurts|is\s*hurting|aches|pains)\b",
         r"\b(am\s*i\s*dying|is\s*my\s*condition\s*(fatal|cancer))\b",
+        r"\b(symptoms?\s*of|signs?\s*of)\b",
+        r"\b(life\s*threatening|fatal|fatalit(y|ies))\b",
+        r"\b(abdominal|chest|head|stomach)\s*pain\b",
+        r"\b(heart\s*attack|stroke|appendicitis)\b",
     ]
 
     # 2. Medication, Prescription, and Dosage Inquiries
@@ -63,6 +67,7 @@ class SafetyGuard:
         r"\b(medical\s*advice|treatment\s*plan|home\s*remed(y|ies)|clinical\s*decision)\b",
         r"\bhow\s*to\s*(perform|do)\s*(cpr|first\s*aid|surgery)\b",
         r"\b(should\s*i\s*(take\s*my\s*kid|go\s*to\s*the\s*doctor\s*for\s*my\s*fever))\b",
+        r"\b(managing|manage)\s*(diabetes|hypertension|asthma|migraine)\b",
     ]
 
     def check_scope(self, text: str) -> SafetyCheckResult:

@@ -12,10 +12,11 @@ class IntentDetector:
 
     # 1. OUT_OF_SCOPE_MEDICAL (Intercepts explicit personal clinical self-diagnosis or acute medical treatment requests)
     OUT_OF_SCOPE_PATTERNS = [
-        (r"\b(i\s*have|i\s*am\s*having|my)\s*(chest\s*pain|shortness\s*of\s*breath|heart\s*attack)\b", 0.95),
-        (r"\b(diagnose\s*me|what\s*(disease|illness)\s*do\s*i\s*have)\b", 0.95),
-        (r"\b(what\s*(medicine|drug|pill)\s*should\s*i\s*take|prescribe\s*me)\b", 0.95),
-        (r"\b(how\s*to\s*treat\s*my|home\s*remedy\s*for\s*my)\b", 0.95),
+        (r"\b(i\s*have|i\s*am\s*having|my|feel).*?(chest\s*pain|shortness\s*of\s*breath|heart\s*attack|severe\s*headache|fever|cough|dizziness)\b", 0.95),
+        (r"\b(diagnose\s*me|what\s*(disease|illness)\s*do\s*i\s*have|do\s*i\s*have)\b", 0.95),
+        (r"\b(what\s*(medicine|drug|pill|dosage)\s*should\s*i\s*take|prescribe\s*me)\b", 0.95),
+        (r"\b(how\s*to\s*treat|home\s*remedy\s*for|medical\s*advice)\b", 0.95),
+        (r"\b(symptoms?\s*of\s*(a\s*)?(heart\s*attack|stroke)|is\s*my\s*.*?\s*life\s*threatening)\b", 0.95),
     ]
 
     # 2. GREETING PATTERNS

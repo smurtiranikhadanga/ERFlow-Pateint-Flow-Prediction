@@ -98,20 +98,6 @@ class ChatbotService:
         except ValueError:
             intent_enum = Intent.UNKNOWN
 
-        # 3. Check direct exact domain/metric/strategy answer first (nurses, doctors, beds, occupancy, surge policies, triage, models, strategies)
-        direct_answer = self.nlp_responder.generate_direct_answer(clean_text, request.context or {})
-        if direct_answer and not direct_answer.startswith("**Emergency Department Operational Guidance**"):
-            resolved_intent = intent_enum.value if intent_enum != Intent.UNKNOWN else Intent.GENERAL_STATUS.value
-            self.conv_mgr.add_message(session_id=session_id, sender="user", text=clean_text, intent=resolved_intent)
-            self.conv_mgr.add_message(session_id=session_id, sender="bot", text=direct_answer, intent=resolved_intent)
-            return ChatResponse(
-                response=direct_answer,
-                intent=resolved_intent,
-                data=None,
-                confidence=0.98,
-                session_id=session_id,
-            )
-
         # 4. Check active session context for follow-up condition refinement & memory
         active_context = self.conv_mgr.get_prediction_context(session_id)
         lower_msg = norm_text.lower()
@@ -218,12 +204,6 @@ class ChatbotService:
                 context=request.context,
             )
 
-            # Fallback to direct domain intelligence if prediction is unavailable or canned error
-            if not prediction_result.is_available or (reply_text and "currently unavailable" in reply_text.lower()):
-                direct_reply = self.nlp_responder.generate_direct_answer(clean_text, request.context)
-                if direct_reply:
-                    reply_text = direct_reply
-
         # =========================================================================
         # PRIORITY 2: KNOWLEDGE-BASED QUESTIONS (ChromaDB RAG Retrieval)
         # =========================================================================
@@ -252,6 +232,9 @@ class ChatbotService:
                     rag_context=rag_context,
                     citations=citations,
                 )
+                if unique_sources and "Sources:" not in reply_text:
+                    sources_str = ", ".join(unique_sources)
+                    reply_text = f"{reply_text}\n\n**Sources:** {sources_str}"
                 data_payload = {
                     "rag_retrieval": True,
                     "confidence_score": max_score,
@@ -269,31 +252,48 @@ class ChatbotService:
         # PRIORITY 3 & FALLBACKS: ANY GENERAL NLP USER QUERY
         # =========================================================================
         if query_category == QueryCategory.GENERAL_CONVERSATIONAL or reply_text is None:
-            # Query knowledge base if not already queried
-            rag_context = ""
-            citations = []
-            max_score = 0.0
-            if retriever is not None:
-                try:
-                    rag_context, citations, max_score = retriever.retrieve_context(norm_text, top_k=2)
-                except Exception:
-                    pass
+            if intent_enum in (Intent.GREETING, Intent.HELP, Intent.PROJECT_INFO, Intent.MODEL_INFO):
+                reply_text = self.resp_gen.generate_response(
+                    intent=intent_enum,
+                    context=request.context,
+                )
+            else:
+                # Query knowledge base if not already queried
+                rag_context = ""
+                citations = []
+                max_score = 0.0
+                if retriever is not None:
+                    try:
+                        rag_context, citations, max_score = retriever.retrieve_context(norm_text, top_k=2)
+                    except Exception:
+                        pass
 
-            reply_text = self.nlp_responder.generate_direct_answer(
-                query=norm_text,
-                context=request.context,
-                rag_context=rag_context,
-                citations=citations,
-            )
-            if citations and max_score >= 0.12:
-                unique_sources = list(dict.fromkeys([c["source"] for c in citations if c.get("source")]))
-                data_payload = {
-                    "rag_retrieval": True,
-                    "confidence_score": max_score,
-                    "sources": unique_sources,
-                    "citations": citations,
-                }
-                confidence = max(confidence, max_score)
+                direct_reply = self.nlp_responder.generate_direct_answer(
+                    query=norm_text,
+                    context=request.context,
+                    rag_context=rag_context,
+                    citations=citations,
+                )
+                if intent_enum == Intent.UNKNOWN and direct_reply and direct_reply.startswith("**Emergency Department Operational Guidance**"):
+                    reply_text = self.resp_gen.generate_response(
+                        intent=Intent.UNKNOWN,
+                        context=request.context,
+                    )
+                else:
+                    reply_text = direct_reply
+
+                if citations and max_score >= 0.12:
+                    unique_sources = list(dict.fromkeys([c["source"] for c in citations if c.get("source")]))
+                    if unique_sources and reply_text and "Sources:" not in reply_text:
+                        sources_str = ", ".join(unique_sources)
+                        reply_text = f"{reply_text}\n\n**Sources:** {sources_str}"
+                    data_payload = {
+                        "rag_retrieval": True,
+                        "confidence_score": max_score,
+                        "sources": unique_sources,
+                        "citations": citations,
+                    }
+                    confidence = max(confidence, max_score)
 
         # 7. Record bot message in history
         self.conv_mgr.add_message(

@@ -43,9 +43,16 @@ def test_failure_scenario_missing_or_corrupted_document(tmp_path):
 
 def test_failure_scenario_chromadb_unavailable_fallback():
     """Test 3: VectorStore falls back to in-memory TF-IDF engine if ChromaDB fails."""
-    with patch("chromadb.PersistentClient", side_effect=Exception("ChromaDB connection error")):
+    import sys
+    from unittest.mock import MagicMock
+    mock_chroma = MagicMock()
+    mock_chroma.PersistentClient.side_effect = Exception("ChromaDB connection error")
+    with patch.dict(sys.modules, {"chromadb": mock_chroma}), \
+         patch("backend.rag.vector_store.chromadb", mock_chroma), \
+         patch("backend.rag.vector_store.CHROMADB_AVAILABLE", True):
         vs = VectorStore(collection_name="fallback_test_collection")
         assert vs._use_fallback is True, "VectorStore should activate TF-IDF fallback when ChromaDB is unavailable"
+
 
 
 def test_failure_scenario_embedding_engine_failure():
