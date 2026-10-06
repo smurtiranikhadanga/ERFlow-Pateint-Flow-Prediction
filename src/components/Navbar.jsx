@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, Menu, X } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV_LINKS = [
   { label: "Home", href: "#home" },
@@ -66,7 +67,8 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden lg:flex items-center">
+        <div className="hidden lg:flex items-center gap-3">
+          <ThemeToggle />
           <Link
             to="/dashboard"
             className="inline-flex items-center rounded-lg bg-blue px-4 py-2.5 text-[15px] font-semibold text-white shadow-soft transition-colors hover:bg-blue-dark"
@@ -75,15 +77,18 @@ export default function Navbar() {
           </Link>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-label={open ? "Close menu" : "Open menu"}
-          className="inline-flex items-center justify-center rounded-lg border border-border p-2 text-navy lg:hidden"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        <div className="flex items-center gap-2 lg:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-label={open ? "Close menu" : "Open menu"}
+            className="inline-flex items-center justify-center rounded-lg border border-border p-2 text-navy"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </nav>
 
       {open && (
@@ -100,7 +105,8 @@ export default function Navbar() {
                 </a>
               </li>
             ))}
-            <li className="pt-2">
+            <li className="pt-2 flex flex-col gap-2">
+              <ThemeToggle showLabel={true} />
               <Link
                 to="/dashboard"
                 onClick={() => setOpen(false)}

@@ -12,6 +12,7 @@ import ModelMonitoring from "./dashboard/pages/ModelMonitoring";
 import AIAssistant from "./dashboard/pages/AIAssistant";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./dashboard/components/ErrorBoundary";
+import { ThemeProvider } from "./context/ThemeContext";
 import { ModeProvider } from "./context/ModeContext";
 import { ERProvider } from "./context/ERContext";
 
@@ -42,11 +43,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ModeProvider>
-      <ERProvider>
-        <AppContent />
-      </ERProvider>
-    </ModeProvider>
+    <ThemeProvider>
+      <ModeProvider>
+        <ERProvider>
+          <AppContent />
+        </ERProvider>
+      </ModeProvider>
+    </ThemeProvider>
   );
 }
 

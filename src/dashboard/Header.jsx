@@ -3,6 +3,7 @@ import { Bell, Menu, PanelLeftOpen } from "lucide-react";
 import { NOTIFICATIONS } from "./mockData";
 import { useMode } from "../context/ModeContext";
 import { erflowApi } from "../services/api";
+import ThemeToggle from "../components/ThemeToggle";
 
 function useClock() {
   const [now, setNow] = useState(() => new Date());
@@ -185,6 +186,7 @@ export default function Header({ title, subtitle, onOpenMobileSidebar, onToggleD
           <span className="text-[11px] font-medium text-navy-soft">{datePart}</span>
         </div>
         <SystemStatus />
+        <ThemeToggle />
         <NotificationsMenu />
       </div>
     </header>

@@ -39,27 +39,374 @@
   --shadow-lift: 0 10px 30px -5px rgba(6, 49, 84, 0.12), 0 0 15px rgba(47, 157, 148, 0.2);
 }
 
+/* ==========================================================================
+   Dark Theme (Exact Palette: #c0e6fd, #80aad3, #5b86b6, #3f6593, #1b3554, #000f22)
+   ========================================================================== */
+.dark,
+[data-theme="dark"] {
+  /* Canvas Background: #000f22 (Deep Pitch Navy from palette) */
+  --color-bg: #000f22;
+
+  /* Elevated Card & Panel Surface: #1b3554 (Midnight Navy from palette) */
+  --color-surface: #1b3554;
+  
+  /* Typography Tokens from palette */
+  --color-navy: #FFFFFF;         /* Primary Headings & Numbers: 100% Crisp White */
+  --color-navy-muted: #c0e6fd;   /* Subtitles & Headings: #c0e6fd Light Ice Blue */
+  --color-navy-soft: #c0e6fd;    /* Labels, Body Text, Timestamps: #c0e6fd Light Sky Blue */
+  
+  /* Outlines & Borders from palette */
+  --color-border: #3f6593;       /* #3f6593 Medium Slate Blue */
+  --color-border-strong: #5b86b6;/* #5b86b6 Slate Blue */
+
+  /* Accents from palette */
+  --color-blue: #80aad3;         /* #80aad3 Soft Cerulean Blue */
+  --color-blue-dark: #c0e6fd;
+  --color-blue-tint: rgba(91, 134, 182, 0.25);
+
+  --color-teal: #80aad3;
+  --color-teal-tint: rgba(128, 170, 211, 0.22);
+
+  --color-green: #86EFAC;
+  --color-green-tint: rgba(134, 239, 172, 0.16);
+
+  --color-amber: #FDE047;
+  --color-amber-tint: rgba(253, 224, 71, 0.16);
+
+  --color-red: #FCA5A5;
+  --color-red-tint: rgba(252, 165, 165, 0.16);
+
+  --color-white: #FFFFFF;
+
+  --shadow-soft: 0 4px 20px -2px rgba(0, 15, 34, 0.6);
+  --shadow-lift: 0 10px 30px -5px rgba(0, 15, 34, 0.8), 0 0 15px rgba(91, 134, 182, 0.25);
+}
+
 * {
   box-sizing: border-box;
 }
 
 html {
+  font-size: 17.5px;
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  background-color: #F7F6F2;
-  color: #063154;
+  background-color: var(--color-bg);
+  color: var(--color-navy);
   font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-.bg-surface, .bg-bg {
+/* Scaled Typography Sizes across the UI for increased readability */
+.text-\[10px\], .text-\[10\.5px\] {
+  font-size: 12.5px !important;
+}
+
+.text-\[11px\], .text-\[11\.5px\] {
+  font-size: 13.5px !important;
+}
+
+.text-\[12px\], .text-\[12\.5px\] {
+  font-size: 14.5px !important;
+}
+
+.text-\[13px\], .text-\[13\.5px\] {
+  font-size: 15.5px !important;
+}
+
+.text-\[14px\], .text-\[14\.5px\] {
+  font-size: 16.5px !important;
+}
+
+.text-\[15px\] {
+  font-size: 17.5px !important;
+}
+
+.text-\[16px\] {
+  font-size: 18.5px !important;
+}
+
+.text-\[17px\] {
+  font-size: 19.5px !important;
+}
+
+.text-xs {
+  font-size: 0.85rem !important;
+}
+
+.text-sm {
+  font-size: 0.95rem !important;
+}
+
+.text-base {
+  font-size: 1.05rem !important;
+}
+
+.bg-surface,
+.bg-bg {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+/* ==========================================================================
+   Dark Mode Palette Styling (Cohesive Ambiance Matching Palette Image)
+   ========================================================================== */
+
+/* Background Ambiance: #000f22 canvas with smooth midnight-to-slate radiance */
+.dark body,
+.dark .bg-bg,
+[data-theme="dark"] body,
+[data-theme="dark"] .bg-bg {
+  background-color: #000f22 !important;
+  background-image: radial-gradient(at 10% 20%, rgba(27, 53, 84, 0.8) 0px, transparent 65%),
+                    radial-gradient(at 95% 85%, rgba(63, 101, 147, 0.45) 0px, transparent 60%) !important;
+  background-attachment: fixed !important;
+  color: #FFFFFF !important;
+}
+
+/* Card & panel surfaces */
+.dark .bg-surface,
+[data-theme="dark"] .bg-surface {
+  background-color: #1b3554 !important;
+  border-color: #3f6593 !important;
+}
+
+/* Borders */
+.dark .border-border,
+[data-theme="dark"] .border-border {
+  border-color: #3f6593 !important;
+}
+
+.dark .border-border-strong,
+[data-theme="dark"] .border-border-strong {
+  border-color: #5b86b6 !important;
+}
+
+/* Typography enforcement */
+.dark .text-navy,
+[data-theme="dark"] .text-navy,
+.dark h1,
+.dark h2,
+.dark h3,
+.dark h4,
+.dark h5,
+.dark h6 {
+  color: #FFFFFF !important;
+}
+
+.dark .text-navy-muted,
+[data-theme="dark"] .text-navy-muted {
+  color: #c0e6fd !important;
+}
+
+.dark .text-navy-soft,
+[data-theme="dark"] .text-navy-soft {
+  color: #c0e6fd !important;
+}
+
+.dark label,
+[data-theme="dark"] label {
+  color: #c0e6fd !important;
+}
+
+/* Sidebar and general text-white opacities */
+.dark .text-white\/50,
+.dark .text-white\/60,
+.dark .text-white\/70,
+.dark .text-white\/80,
+.dark .text-white\/90,
+[data-theme="dark"] .text-white\/50,
+[data-theme="dark"] .text-white\/60,
+[data-theme="dark"] .text-white\/70,
+[data-theme="dark"] .text-white\/80,
+[data-theme="dark"] .text-white\/90 {
+  color: #FFFFFF !important;
+}
+
+/* Overview hero gradient banner override: matches #000f22 & #1b3554 */
+.dark .from-\[\#063154\],
+[data-theme="dark"] .from-\[\#063154\] {
+  --tw-gradient-from: #000f22 !important;
+}
+
+.dark .via-\[\#025F67\],
+[data-theme="dark"] .via-\[\#025F67\] {
+  --tw-gradient-via: #1b3554 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #1b3554, var(--tw-gradient-to) !important;
+}
+
+.dark .to-\[\#063154\],
+[data-theme="dark"] .to-\[\#063154\] {
+  --tw-gradient-to: #000f22 !important;
+}
+
+.dark .bg-\[\#2F9D94\],
+[data-theme="dark"] .bg-\[\#2F9D94\] {
+  background-color: #3f6593 !important;
+  border: 1px solid #5b86b6 !important;
+  color: #FFFFFF !important;
+}
+
+.dark .bg-\[\#2F9D94\]:hover,
+[data-theme="dark"] .bg-\[\#2F9D94\]:hover {
+  background-color: #5b86b6 !important;
+  color: #FFFFFF !important;
+}
+
+.dark .text-\[\#2F9D94\],
+[data-theme="dark"] .text-\[\#2F9D94\] {
+  color: #c0e6fd !important;
+}
+
+.dark .text-\[\#FCD34D\],
+[data-theme="dark"] .text-\[\#FCD34D\] {
+  color: #FDE047 !important;
+}
+
+/* Icon backgrounds in MetricCard & SummaryCard */
+.dark .bg-navy\/5,
+[data-theme="dark"] .bg-navy\/5 {
+  background-color: rgba(91, 134, 182, 0.25) !important;
+  color: #c0e6fd !important;
+}
+
+.dark .bg-blue-tint,
+[data-theme="dark"] .bg-blue-tint {
+  background-color: rgba(91, 134, 182, 0.25) !important;
+  color: #c0e6fd !important;
+  border-color: #3f6593 !important;
+}
+
+/* Accent texts in dark mode */
+.dark .text-blue,
+[data-theme="dark"] .text-blue {
+  color: #80aad3 !important;
+}
+
+.dark .text-blue-dark,
+[data-theme="dark"] .text-blue-dark {
+  color: #c0e6fd !important;
+}
+
+.dark .text-amber-dark,
+[data-theme="dark"] .text-amber-dark,
+.dark .text-amber,
+[data-theme="dark"] .text-amber {
+  color: #FDE047 !important;
+}
+
+.dark .text-teal,
+[data-theme="dark"] .text-teal {
+  color: #80aad3 !important;
+}
+
+.dark .text-green,
+[data-theme="dark"] .text-green {
+  color: #86EFAC !important;
+}
+
+.dark .text-red,
+[data-theme="dark"] .text-red {
+  color: #FCA5A5 !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea,
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color: #FFFFFF !important;
+  background-color: #000f22 !important;
+  border-color: #3f6593 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder,
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #80aad3 !important;
+  opacity: 0.8;
+}
+
+/* SVG chart styling */
+.dark svg text,
+[data-theme="dark"] svg text {
+  fill: #c0e6fd !important;
+}
+
+.dark svg line[stroke="#BCC5CC"],
+[data-theme="dark"] svg line[stroke="#BCC5CC"] {
+  stroke: #3f6593 !important;
+}
+
+/* Dark mode sidebar & header */
+.dark aside.bg-navy,
+[data-theme="dark"] aside.bg-navy {
+  background-color: #000f22 !important;
+  border-right-color: #3f6593 !important;
+}
+
+.dark header,
+[data-theme="dark"] header {
+  background-color: rgba(27, 53, 84, 0.95) !important;
+  border-bottom-color: #3f6593 !important;
+}
+
+.dark .bg-navy\/70,
+[data-theme="dark"] .bg-navy\/70,
+.dark .bg-navy\/40,
+[data-theme="dark"] .bg-navy\/40 {
+  background-color: rgba(0, 15, 34, 0.85) !important;
+}
+
+.dark .bg-white,
+[data-theme="dark"] .bg-white {
+  background-color: var(--color-surface) !important;
+}
+
+.dark button.bg-white,
+[data-theme="dark"] button.bg-white,
+.dark a.bg-white,
+[data-theme="dark"] a.bg-white {
+  background-color: #FFFFFF !important;
+  color: #000f22 !important;
+}
+
+.dark .bg-blue,
+[data-theme="dark"] .bg-blue {
+  background-color: #3f6593 !important;
+  border: 1px solid #5b86b6 !important;
+  color: #FFFFFF !important;
+}
+
+.dark .bg-blue:hover,
+[data-theme="dark"] .bg-blue:hover {
+  background-color: #5b86b6 !important;
+  color: #FFFFFF !important;
+}
+
+.dark .border-blue,
+[data-theme="dark"] .border-blue {
+  border-color: #5b86b6 !important;
+}
+
+.dark .hover\:text-blue:hover,
+[data-theme="dark"] .hover\:text-blue:hover {
+  color: #c0e6fd !important;
+}
+
+.dark select option,
+[data-theme="dark"] select option {
+  background-color: #000f22 !important;
+  color: #FFFFFF !important;
 }
 
 #root {
