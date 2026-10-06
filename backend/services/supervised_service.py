@@ -1,14 +1,10 @@
 import logging
-from typing import Dict, Any, Optional
-import numpy as np
-import pandas as pd
 
 from .artifact_loader import artifact_loader
 from .monitoring_service import monitoring_service
 from ..utils.feature_engineering import engineer_supervised_features
 from ..schemas.hospital_state import HospitalState
 from ..schemas.supervised import WaitingTimeResponse, CrowdingRiskResponse, SupervisedPredictionResponse
-
 from .xai_explainer import explain_prediction, get_feature_names_from_preprocessor
 
 logger = logging.getLogger("erflow.supervised_service")
@@ -19,6 +15,8 @@ class SupervisedService:
 
     def predict_waiting_time(self, state: HospitalState) -> WaitingTimeResponse:
         """Predict expected waiting time in minutes."""
+        if isinstance(state, dict):
+            state = HospitalState(**state)
         t0 = monitoring_service.record_inference_start("waiting_time_model")
         try:
             state_dict = state.model_dump()
@@ -71,6 +69,8 @@ class SupervisedService:
 
     def predict_crowding_risk(self, state: HospitalState) -> CrowdingRiskResponse:
         """Predict multi-class crowding level and probability distribution."""
+        if isinstance(state, dict):
+            state = HospitalState(**state)
         t0 = monitoring_service.record_inference_start("crowding_model")
         try:
             state_dict = state.model_dump()
@@ -105,7 +105,7 @@ class SupervisedService:
                 crowding_score=score,
                 probabilities=prob_dict,
                 model_name="XGBoost Classifier",
-                expected_window="6:00 PM – 9:00 PM" if state.hour_of_day >= 15 else "Next 3 Hours",
+                expected_window="6:00 PM - 9:00 PM" if state.hour_of_day >= 15 else "Next 3 Hours",
                 explanation=explanation,
             )
             monitoring_service.record_inference_success("crowding_model", t0, {"crowding_level": display_level, "crowding_score": score}, state_dict)
@@ -116,6 +116,8 @@ class SupervisedService:
 
     def predict_all(self, state: HospitalState) -> SupervisedPredictionResponse:
         """Run both supervised models concurrently."""
+        if isinstance(state, dict):
+            state = HospitalState(**state)
         wt = self.predict_waiting_time(state)
         cr = self.predict_crowding_risk(state)
         return SupervisedPredictionResponse(

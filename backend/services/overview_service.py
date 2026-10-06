@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, Any, List
 
 from .supervised_service import supervised_service
 from .unsupervised_service import unsupervised_service
@@ -19,6 +18,8 @@ class OverviewService:
     """Combines outputs from all three ML pillars for the Overview dashboard and AI Assistant."""
 
     def get_overview(self, state: HospitalState) -> DashboardOverviewResponse:
+        if isinstance(state, dict):
+            state = HospitalState(**state)
         forecast = deep_learning_service.forecast_arrivals(state)
         waiting = supervised_service.predict_waiting_time(state)
         crowding = supervised_service.predict_crowding_risk(state)

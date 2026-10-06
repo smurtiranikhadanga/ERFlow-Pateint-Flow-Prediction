@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import List, Dict, Any, Optional
+from typing import List
 import numpy as np
 import pandas as pd
 
@@ -25,6 +25,8 @@ class DeepLearningService:
         Construct a valid (1, 168, 17) sequence required by the 2-layer LSTM.
         Uses actual continuous historical data from ER_dataset.csv or user-provided history.
         """
+        if isinstance(state, dict):
+            state = HospitalState(**state)
         config = artifact_loader.lstm_config
         seq_len = config.get("sequence_length", 168)
 
@@ -84,11 +86,17 @@ class DeepLearningService:
             rows.append(feat_row)
 
         feature_scaler = artifact_loader.lstm_feature_scaler
-        scaled_rows = feature_scaler.transform(rows)
+        if hasattr(feature_scaler, "feature_names_in_") and feature_scaler.feature_names_in_ is not None:
+            df_rows = pd.DataFrame(rows, columns=feature_scaler.feature_names_in_)
+            scaled_rows = feature_scaler.transform(df_rows)
+        else:
+            scaled_rows = feature_scaler.transform(rows)
         return np.expand_dims(scaled_rows, axis=0)
 
     def forecast_arrivals(self, state: HospitalState) -> ArrivalForecastResponse:
         """Run LSTM inference and return cumulative horizon predictions and 24h timeline."""
+        if isinstance(state, dict):
+            state = HospitalState(**state)
         t0 = monitoring_service.record_inference_start("patient_volume_model")
         try:
             model = artifact_loader.lstm_model
