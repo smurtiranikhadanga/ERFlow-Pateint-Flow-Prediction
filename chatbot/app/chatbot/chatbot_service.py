@@ -252,7 +252,7 @@ class ChatbotService:
         # PRIORITY 3 & FALLBACKS: ANY GENERAL NLP USER QUERY
         # =========================================================================
         if query_category == QueryCategory.GENERAL_CONVERSATIONAL or reply_text is None:
-            if intent_enum in (Intent.GREETING, Intent.HELP, Intent.PROJECT_INFO, Intent.MODEL_INFO):
+            if intent_enum in (Intent.GREETING, Intent.HELP, Intent.PROJECT_INFO, Intent.MODEL_INFO, Intent.UNKNOWN):
                 reply_text = self.resp_gen.generate_response(
                     intent=intent_enum,
                     context=request.context,
@@ -282,7 +282,7 @@ class ChatbotService:
                 else:
                     reply_text = direct_reply
 
-                if citations and max_score >= 0.12:
+                if citations and max_score >= 0.12 and intent_enum != Intent.UNKNOWN:
                     unique_sources = list(dict.fromkeys([c["source"] for c in citations if c.get("source")]))
                     if unique_sources and reply_text and "Sources:" not in reply_text:
                         sources_str = ", ".join(unique_sources)
